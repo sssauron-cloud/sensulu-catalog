@@ -244,7 +244,26 @@
   </style>
 </head>
 <body>
+<!-- Окно ввода данных клиента перед показом каталога -->
+<div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 16px;">
+  <div style="background: #ffffff; padding: 24px; border-radius: 16px; width: 100%; max-width: 360px; box-sizing: border-box; font-family: inherit;">
+    <h3 style="margin: 0 0 8px 0; text-align: center; color: var(--accent-color); font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Контакты доставки</h3>
+    <p style="margin: 0 0 16px 0; font-size: 12px; color: var(--secondary-text); text-align: center;">Пожалуйста, укажите ваши данные для оформления заказа</p>
+    
+    <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Ваше имя:</label>
+    <input type="text" id="cust-name" placeholder="Иван" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
 
+    <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Страна:</label>
+    <input type="text" id="cust-country" placeholder="Казахстан" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
+
+    <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Город:</label>
+    <input type="text" id="cust-city" placeholder="Астана" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
+
+    <button onclick="saveCustomerProfile()" style="width: 100%; background: var(--accent-color); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
+      Перейти к каталогу
+    </button>
+  </div>
+</div>
   <div class="header">
     <h1>SEN SULU</h1>
     <p>Self-love starts with us</p>
@@ -508,7 +527,26 @@
       document.getElementById('total-price').innerText = getConvertedPrice(totalKZT);
     }
 
-    function sendOrder() {
+// Переменная для хранения данных клиента
+    let customerData = { name: '', country: '', city: '' };
+
+    // 1. Функция валидации и сохранения профиля
+    function saveCustomerProfile() {
+      const name = document.getElementById('cust-name').value.trim();
+      const country = document.getElementById('cust-country').value.trim();
+      const city = document.getElementById('cust-city').value.trim();
+
+      if (!name || !country || !city) {
+        alert('Пожалуйста, заполните все 3 поля!');
+        return;
+      }
+
+      customerData = { name, country, city };
+      document.getElementById('user-data-modal').style.display = 'none';
+    }
+
+    // 2. Обновленная функция отправки заказа в Telegram и Битрикс24
+    async function sendOrder() {
       let orderList = [];
       let totalKZT = 0;
       const symbol = currencySymbols[currentCurrency];
@@ -528,18 +566,56 @@
       }
 
       const totalDisplay = getConvertedPrice(totalKZT);
-      const data = {
-        items: orderList,
-        total: `${totalDisplay} ${symbol}`,
-        currency: currentCurrency,
-        totalKZT: `${totalKZT} ₸`
+      
+      // Данные пользователя Telegram
+      const tgUser = tg?.initDataUnsafe?.user || {};
+      const tgUsername = tgUser.username ? `@${tgUser.username}` : 'не указан';
+
+      // Формируем payload для Bitrix24 REST API
+      const bitrixPayload = {
+        fields: {
+          TITLE: `Заказ из WebApp: ${customerData.name} (${customerData.city})`,
+          OPPORTUNITY: totalKZT,
+          CURRENCY_ID: "KZT",
+          COMMENTS: `=== ДАННЫЕ КЛИЕНТА ===\n` +
+                    `Имя: ${customerData.name}\n` +
+                    `Страна: ${customerData.country}\n` +
+                    `Город: ${customerData.city}\n` +
+                    `Telegram: ${tgUsername}\n\n` +
+                    `=== СОСТАВ ЗАКАЗА ===\n` +
+                    orderList.join('\n') + `\n\n` +
+                    `Итого: ${totalDisplay} ${symbol} (${totalKZT} KZT)`
+        }
       };
 
-      if (tg && tg.sendData) {
-        tg.sendData(JSON.stringify(data));
-        tg.close();
-      } else {
-        alert("Заказ сформирован:\n\n" + orderList.join("\n") + "\n\nИтого: " + totalDisplay + " " + symbol);
+      // Входящий вебхук Bitrix24 (укажите ваш URL)
+      const bitrixWebhookUrl = "https://YOUR_BITRIX24_DOMAIN.bitrix24.kz/rest/1/YOUR_WEBHOOK_CODE/crm.deal.add.json";
+
+      try {
+        if (!bitrixWebhookUrl.includes("YOUR_BITRIX24_DOMAIN")) {
+          await fetch(bitrixWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bitrixPayload)
+          });
+        }
+
+        const telegramData = {
+          customer: customerData,
+          items: orderList,
+          total: `${totalDisplay} ${symbol}`,
+          totalKZT: `${totalKZT} ₸`
+        };
+
+        if (tg && tg.sendData) {
+          tg.sendData(JSON.stringify(telegramData));
+          tg.close();
+        } else {
+          alert("Заказ принят!\n\n" + bitrixPayload.fields.COMMENTS);
+        }
+      } catch (err) {
+        console.error("Ошибка отправки заказа:", err);
+        alert("Произошла ошибка при отправке заказа. Попробуйте еще раз.");
       }
     }
 
