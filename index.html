@@ -69,13 +69,19 @@
       outline: none;
     }
 
-    /* Карусель категорий */
+    /* Карусель категорий с исправленным тач-скроллом */
     .categories-carousel {
       display: flex;
       gap: 12px;
       overflow-x: auto;
-      padding-bottom: 12px;
-      margin-bottom: 16px;
+      overflow-y: hidden;
+      width: 100%;
+      max-width: 100vw;
+      box-sizing: border-box;
+      padding: 4px 4px 12px 4px;
+      margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch; /* Плавный скролл iOS */
+      touch-action: pan-x;              /* Горизонтальный жест Android */
       scrollbar-width: none;
     }
 
@@ -87,7 +93,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 65px;
+      width: 68px;
+      flex-shrink: 0;                  /* Фиксация ширины иконок */
       cursor: pointer;
       opacity: 0.7;
       transition: all 0.2s ease;
@@ -127,6 +134,9 @@
       color: var(--text-color);
       font-weight: 500;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;         /* Обрезка длинного текста */
+      width: 100%;
     }
 
     /* Сетка товаров */
@@ -273,80 +283,117 @@
     let activeCategory = 'all';
 
     const categories = [
-      { id: 'all', name: 'Все товары', img: 'images/cat/all.jpg' },
-      { id: 'blush', name: 'Румяна', img: 'images/cat/blush.jpg' },
-      { id: 'browpencil', name: 'Карандаши бр.', img: 'images/cat/browpencil.jpg' },
-      { id: 'lipliner', name: 'Карандаши губ', img: 'images/cat/lipliner.jpg' },
-      { id: 'gloss', name: 'Блески для губ', img: 'images/cat/gloss.jpg' },
-      { id: 'concealer', name: 'Консилеры', img: 'images/cat/concealer.jpg' },
-      { id: 'contour', name: 'Контуринг', img: 'images/cat/contour.jpg' },
-      { id: 'mascara', name: 'Тушь', img: 'images/cat/mascara.jpg' },
-      { id: 'powder', name: 'Пудра', img: 'images/cat/powder.jpg' },
-      { id: 'sparkle', name: 'Спарклы', img: 'images/cat/sparkle.jpg' },
-      { id: 'browgel', name: 'Гели для бровей', img: 'images/cat/browgel.jpg' },
-      { id: 'puff', name: 'Пуховки и спонжи', img: 'images/cat/puff.jpg' }
+      { id: 'all', name: 'Все товары', img: 'images/all.webp' },
+      { id: 'mascara', name: 'Тушь', img: 'images/mascara.webp' },
+      { id: 'contour', name: 'Контуринг', img: 'images/contour.webp' },
+      { id: 'blush', name: 'Румяна', img: 'images/blush.webp' },
+      { id: 'gloss', name: 'Блески для губ', img: 'images/gloss.webp' },
+      { id: 'lipliner', name: 'Карандаши губ', img: 'images/lipliner.webp' },
+      { id: 'sparkle', name: 'Спарклы', img: 'images/sparkle.webp' },
+      { id: 'concealer', name: 'Консилеры', img: 'images/concealer.webp' },
+      { id: 'powder', name: 'Пудра', img: 'images/powder.webp' },
+      { id: 'browpencil', name: 'Карандаши бр.', img: 'images/browpencil.webp' },
+      { id: 'puff', name: 'Пуховки', img: 'images/puff.webp' },
+      { id: 'browgel', name: 'Гели для бровей', img: 'images/browgel.webp' },
+      { id: 'bbcream', name: 'BB крем', img: 'images/bbcream.webp' },
+      { id: 'eyeliner', name: 'Подводка', img: 'images/eyeliner.webp' },
+      { id: 'eyeshadow', name: 'Тени', img: 'images/eyeshadow.webp' },
+      { id: 'fixer', name: 'Фиксатор', img: 'images/fixer.webp' },
     ];
 
-    // ПОЛНЫЙ КАТАЛОГ С КАЖДЫМ ОТТЕНКОМ
     const products = [
-      // РУМЯНА В СТИКЕ (7.5g)
-      { id: 'b01', category: 'blush', title: "Blush Stick 7.5g", shade: "01 Petal Glow", priceKZT: 9900, desc: "Нежно-розовый свежий оттенок", img: "images/products/b01.jpg" },
-      { id: 'b02', category: 'blush', title: "Blush Stick 7.5g", shade: "02 Sunrise Glow", priceKZT: 9900, desc: "Теплый персиковый оттенок", img: "images/products/b02.jpg" },
-      { id: 'b03', category: 'blush', title: "Blush Stick 7.5g", shade: "03 Berry Bloom", priceKZT: 9900, desc: "Насыщенный ягодный оттенок", img: "images/products/b03.jpg" },
-      { id: 'b04', category: 'blush', title: "Blush Stick 7.5g", shade: "04 Coral Dust", priceKZT: 9900, desc: "Кораловый сочный оттенок", img: "images/products/b04.jpg" },
+     // ТУШЬ ДЛЯ РЕСНИЦ
+      { id: 'm01', category: 'mascara', title: "Тушь 7,5 гр", shade: "01 Чёрный", priceKZT: 4800, desc: "Ультрачерный объем и удлинение", img: "images/maskara-01.webp" },
+      { id: 'm02', category: 'mascara', title: "Тушь 7,5 гр", shade: "02 Светло-коричневый", priceKZT: 4800, desc: "Насыщенный коричневый взгляд", img: "images/maskara-02.webp" },
+      { id: 'm03', category: 'mascara', title: "Тушь 7,5 гр", shade: "03 Тёмно-синий", priceKZT: 4800, desc: "Яркий синий взгляд", img: "images/maskara-03.webp" },
+
+       // КОНТУРИНГ (Contour Stick)
+      { id: 'cn01', category: 'contour', title: "Контуринг", shade: "01 Вечерний макияж", priceKZT: 11900, desc: "Для более выраженного скульптурирования и вечернего макияжа.", img: "images/contour_1.webp" },
+      { id: 'cn02', category: 'contour', title: "Контуринг", shade: "02 Универсальный тон", priceKZT: 11900, desc: "Универсальный, подходит большинству тонов кожи.", img: "images/contour_1.webp" },
+      { id: 'cn03', category: 'contour', title: "Контуринг", shade: "03 Мягкий контсуринг", priceKZT: 11900, desc: "Для мягкого контуринга, светлой кожи и естественного эффекта.", img: "images/contour_1.webp" },
 
       // РУМЯНА МИНИ (4.5g)
-      { id: 'bm01', category: 'blush', title: "Blush Mini 4.5g", shade: "01 Petal Glow", priceKZT: 6900, desc: "Компактная версия румян", img: "images/products/bm01.jpg" },
-      { id: 'bm02', category: 'blush', title: "Blush Mini 4.5g", shade: "02 Sunrise Glow", priceKZT: 6900, desc: "Компактная версия румян", img: "images/products/bm02.jpg" },
+      { id: 'bm01', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "01 Пудровый розовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_1.webp" },
+      { id: 'bm02', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "02 Тёплый нюд", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_2.webp" },
+      { id: 'bm03', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "03 Сливовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_3.webp" },
+      { id: 'bm04', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "04 Ягодный красный", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_4.webp" },
+      { id: 'bm05', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "05 Кораловый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_5.webp" },
+      { id: 'bm06', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "06 Розовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_6.webp" },
+     
+     
+
+      // РУМЯНА В СТИКЕ (7.5g)
+      { id: 'b01', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "01 Пудровый розовый", priceKZT: 9900, desc: "Пудровый розовый", img: "images/Blush_Stick_1.webp" },
+      { id: 'b02', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "02 Тёплый нюд", priceKZT: 9900, desc: "Тёплый нюд", img: "images/Blush_Stick_1.webp" },
+      { id: 'b03', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "03 Сливовый", priceKZT: 9900, desc: "Сливовый", img: "images/Blush_Stick_1.webp" },
+      { id: 'b04', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "04 Ягодный красный", priceKZT: 9900, desc: "Ягодный красный", img: "images/Blush_Stick_1.webp" },
+      { id: 'b05', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "05 Кораловый", priceKZT: 9900, desc: "Кораловый", img: "images/Blush_Stick_1.webp" },
+      { id: 'b06', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "06 Розовый", priceKZT: 9900, desc: "Розовый", img: "images/Blush_Stick_1.webp" },
+
+       // БЛЕСКИ ДЛЯ ГУБ (Блеск для губ 4,5 гр)
+      { id: 'g01', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "01 Элегантный нюд с лёгким золотисто-шёлковым переливом.", priceKZT: 7200, desc: "Элегантный нюд с лёгким золотисто-шёлковым переливом.", img: "images/gloss01.webp" },
+      { id: 'g02', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "02 Нежный персиково-розовый оттенок с бархатистой текстурой.", priceKZT: 7200, desc: "Нежный персиково-розовый оттенок с бархатистой текстурой.", img: "images/gloss02.webp" },
+      { id: 'g03', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "03 Тёплый карамельный нюд с мягким светлым подтоном.", priceKZT: 7200, desc: "Тёплый карамельный нюд с мягким светлым подтоном.", img: "images/gloss03.webp" },
+      { id: 'g04', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "04 Сочный и выразительный вишнёвый оттенок с ягодным подтоном.", priceKZT: 7200, desc: "Сочный и выразительный вишнёвый оттенок с ягодным подтоном", img: "images/gloss04.webp" },
+      { id: 'g05', category: 'gloss', title: "Сет из мини-блесков (4 шт.)", shade: "Сет из мини-блесков (4 шт.)", priceKZT: 7200, desc: "Glossy Gems — сет из 4 мини-блесков: лёгкая нелипкая текстура и деликатный блеск. Оттенки: 01 Silk Kiss, 02 Peach Velvet, 03 Caramel Souffle, 04 Cherry Bomb.", img: "images/gloss05.webp" },
+
+       // КАРАНДАШИ ДЛЯ ГУБ (Lip Liner 0.4g)
+      { id: 'l01', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "01 Глубокий, насыщенный тёмно-шоколадный оттенок.", priceKZT: 2850, desc: "Глубокий, насыщенный тёмно-шоколадный оттенок.", img: "images/lipliner_01.webp" },
+      { id: 'l02', category: 'lipliner', title: "Lip Liner 0.4g", shade: "02 Тёплый кофейный оттенок с мягким финишем.", priceKZT: 2850, desc: "Тёплый кофейный оттенок с мягким финишем.", img: "images/lipliner_02.webp" },
+      { id: 'l03', category: 'lipliner', title: "Lip Liner 0.4g", shade: "03 Классический орехово-коричневый нюд.", priceKZT: 2850, desc: "Классический орехово-коричневый нюд.", img: "images/lipliner_03.webp" },
+      { id: 'l04', category: 'lipliner', title: "Lip Liner 0.4g", shade: "04 Пряный тёплый оттенок с корично-красным подтоном.", priceKZT: 2850, desc: "Пряный тёплый оттенок с корично-красным подтоном.", img: "images/lipliner_04.webp" },
+      { id: 'l05', category: 'lipliner', title: "Lip Liner 0.4g", shade: "05 Нежный нюд с розовым подтоном.", priceKZT: 2850, desc: "05 Нежный нюд с розовым подтоном.", img: "images/lipliner_05.webp" },
+      { id: 'l06', category: 'lipliner', title: "Lip Liner 0.4g", shade: "06 Тёплый, насыщенный нюд с красновато-коричневым оттенком.", priceKZT: 2850, desc: "Тёплый, насыщенный нюд с красновато-коричневым оттенком.", img: "images/lipliner_06.webp" },
+      { id: 'l07', category: 'lipliner', title: "Lip Liner 0.4g", shade: "07 Самый светлый оттенок в линейке - нежный персиково-розовый нюд.", priceKZT: 2850, desc: "Самый светлый оттенок в линейке - нежный персиково-розовый нюд.", img: "images/lipliner_07.webp" },
+
+       // СПАРКЛЫ (Sparkle Eyeshadow)
+      { id: 's01', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "01", priceKZT: 6500, desc: "Холодное серебряное сияние с эффектом влажной кожи.", img: "images/sparkle_01.webp" },
+      { id: 's02', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "02", priceKZT: 6500, desc: "Тёплое золотистое мерцание с мягким отражением.", img: "images/sparkle_02.webp" },
+      { id: 's03', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "03", priceKZT: 6500, desc: "Спокойный песочно-бронзовый оттенок с глубоким сатиновым блеском.", img: "images/sparkle_03.webp" },
+      { id: 's04', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "04", priceKZT: 6500, desc: "Яркое розово-персиковое сияние с шимерной текстурой.", img: "images/sparkle_04.webp" },
+      { id: 's05', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "05", priceKZT: 6500, desc: "Тёплый персиковый оттенок с мягким золотистым свечением.", img: "images/sparkle_05.webp" },
+      { id: 's06', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "06", priceKZT: 6500, desc: "Янтарное сияние с насыщенным мягким металликом.", img: "images/sparkle_06.webp" },
+
+       // КОНСИЛЕРЫ (Concealer 4.6ml)
+      { id: 'c01', category: 'concealer', title: "Консилер 4.6 мл", shade: "01", priceKZT: 5200, desc: "Светлый оттенок с молочным подтоном.", img: "images/concealer-01.webp" },
+      { id: 'c02', category: 'concealer', title: "Консилер 4.6 мл", shade: "02", priceKZT: 5200, desc: "Нейтральный светло-бежевый оттенок, который естественно сливается с кожей.", img: "images/concealer-02.webp" },
+      { id: 'c03', category: 'concealer', title: "Консилер 4.6 мл", shade: "03", priceKZT: 5200, desc: "Натуральный бежевый оттенок для тёплого тона кожи.", img: "images/concealer-03.webp" },
+
+
+       // ПУДРА
+      { id: 'p01', category: 'powder', title: "Минеральная пудра 10 гр", shade: "01", priceKZT: 7800, desc: "Прозрачный оттенок. Универсальный, адаптируется к любому тону кожи, фиксирует макияж и придаёт матовость.", img: "images/powder-01.webp" },
+      { id: 'p02', category: 'powder', title: "Минеральная пудра 10 гр", shade: "02", priceKZT: 7800, desc: "Более тёмный оттенок. Подходит для средних и тёплых оттенков кожи, создаёт естественный финиш без эффекта маски.", img: "images/powder-02.webp" },
+
 
       // КАРАНДАШИ ДЛЯ БРОВЕЙ (Slim)
-      { id: 'br01', category: 'browpencil', title: "Brow Pencil Slim", shade: "01 Blonde", priceKZT: 3500, desc: "Светло-русый нейтральный", img: "images/products/br01.jpg" },
-      { id: 'br02', category: 'browpencil', title: "Brow Pencil Slim", shade: "02 Taupe", priceKZT: 3500, desc: "Серо-коричневый универсальный", img: "images/products/br02.jpg" },
-      { id: 'br03', category: 'browpencil', title: "Brow Pencil Slim", shade: "03 Medium Brown", priceKZT: 3500, desc: "Классический коричневый", img: "images/products/br03.jpg" },
-      { id: 'br04', category: 'browpencil', title: "Brow Pencil Slim", shade: "04 Dark Brown", priceKZT: 3500, desc: "Темный глубокий коричневый", img: "images/products/br04.jpg" },
+      { id: 'br01', category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "01", priceKZT: 3500, desc: "Графитовый оттенок. Подходит для тех, кто предпочитает насыщенные и выразительные брови.", img: "images/browpencil-01.webp" },
+      { id: 'br02', category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "02", priceKZT: 3500, desc: "Тёмно-коричневый оттенок. Идеален для брюнеток и обладательниц тёмных бровей.", img: "images/browpencil-02.webp" },
+      { id: 'br03', category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "03", priceKZT: 3500, desc: "Светло-коричневый оттенок. Отличный вариант для блондинок и светло-русых.", img: "images/browpencil-03.webp" },
+      { id: 'br04', category: 'browpencil', title: "Кисточка для геля со шпателем", shade: "04", priceKZT: 1800, desc: "Удобный инструмент для укладки бровей. Тонкая кисть равномерно распределяет средство, а шпатель помогает создать аккуратную и естественную форму.", img: "images/browpencil-04.webp" },
 
-      // КАРАНДАШИ ДЛЯ ГУБ (Lip Liner 0.4g)
-      { id: 'l01', category: 'lipliner', title: "Lip Liner 0.4g", shade: "01 Coffee", priceKZT: 2850, desc: "Глубокий кофейный нюд", img: "images/products/l01.jpg" },
-      { id: 'l02', category: 'lipliner', title: "Lip Liner 0.4g", shade: "02 Dusty Rose", priceKZT: 2850, desc: "Пыльная роза", img: "images/products/l02.jpg" },
-      { id: 'l03', category: 'lipliner', title: "Lip Liner 0.4g", shade: "03 Nude Beige", priceKZT: 2850, desc: "Бежевый натуральный", img: "images/products/l03.jpg" },
-      { id: 'l04', category: 'lipliner', title: "Lip Liner 0.4g", shade: "04 Cinnamon", priceKZT: 2850, desc: "Теплый коричный оттенок", img: "images/products/l04.jpg" },
-      { id: 'l05', category: 'lipliner', title: "Lip Liner 0.4g", shade: "05 Pure Red", priceKZT: 2850, desc: "Классический красный", img: "images/products/l05.jpg" },
+      // ПУХОВКА
+      { id: 'pf01', category: 'puff', title: "Пуховки", shade: "Пуховки", priceKZT: 2200, desc: "Мягкая, бархатистая текстура пуховки равномерно наносит пудру, создавая естественное и невесомое покрытие.", img: "images/puff_1.webp" },
+      { id: 'pf02', category: 'puff', title: "Бьюти блендер", shade: "Бьюти блендер", priceKZT: 2200, desc: "Гипоаллергенный бьюти-блендер без латекса обеспечивает ровное нанесение без разводов.", img: "images/puff_2.webp" },
+             
+      // ГЕЛЬ ДЛЯ БРОВЕЙ
+      { id: 'gw01', category: 'browgel', title: "Гель воск для бровей 50 мл", shade: "01", priceKZT: 6750, desc: "Фиксирует волоски на 24 часа, сохраняя их естественный внешний вид и создавая эффект ламинирования", img: "images/browgel-01.webp" },
+      { id: 'gw02', category: 'browgel', title: "Гель воск для бровей 15 мл", shade: "02", priceKZT: 4200, desc: "Фиксирует и укладывает волоски бровей, создавая естественный и стойкий эффект.", img: "images/browgel-02.webp" },
+      { id: 'gw03', category: 'browgel', title: "Гель воск для бровей travel версия 10 мл", shade: "03", priceKZT: 4600, desc: "Надежная фиксация эффекта ламинирования", img: "images/browgel-03.webp" },
 
-      // БЛЕСКИ ДЛЯ ГУБ (Lip Gloss 4.5g)
-      { id: 'g01', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Peachy Pink", priceKZT: 7200, desc: "Персиково-розовый с глянцем", img: "images/products/g01.jpg" },
-      { id: 'g02', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Clear Nude", priceKZT: 7200, desc: "Прозрачный зеркальный блеск", img: "images/products/g02.jpg" },
-      { id: 'g03', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Caramel Kiss", priceKZT: 7200, desc: "Карамельный сочный глянец", img: "images/products/g03.jpg" },
-      { id: 'g04', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Rose Shimmer", priceKZT: 7200, desc: "Розовый с микромикрошиммером", img: "images/products/g04.jpg" },
+       // BB крем
+      { id: 'bb01', category: 'bbcream', title: "BB крем 50 мл", shade: "01", priceKZT: 7800, desc: "Светлый оттенок. Идеален для светлой кожи, создаёт свежий и натуральный финиш.", img: "images/bbcrem.webp" },
+      { id: 'bb02', category: 'bbcream', title: "BB крем 50 мл", shade: "02", priceKZT: 7800, desc: "Более тёмный оттенок. Подходит для средних тонов кожи, придавая ей здоровый и ровный оттенок.", img: "images/bbcrem.webp" },
 
-      // КОНСИЛЕРЫ (Concealer 4.6ml)
-      { id: 'c01', category: 'concealer', title: "Concealer 4.6ml", shade: "01 Fair Ivory", priceKZT: 5200, desc: "Очень светлый с фарфоровым тоном", img: "images/products/c01.jpg" },
-      { id: 'c02', category: 'concealer', title: "Concealer 4.6ml", shade: "02 Light Nude", priceKZT: 5200, desc: "Светло-бежевый нейтральный", img: "images/products/c02.jpg" },
-      { id: 'c03', category: 'concealer', title: "Concealer 4.6ml", shade: "03 Medium Warm", priceKZT: 5200, desc: "Натурально-бежевый с теплом", img: "images/products/c03.jpg" },
-
-      // КОНТУРИНГ (Contour Stick)
-      { id: 'cn01', category: 'contour', title: "Contour Stick", shade: "01 Warm Taupe", priceKZT: 8900, desc: "Правильная правильная тень", img: "images/products/cn01.jpg" },
-      { id: 'cn02', category: 'contour', title: "Contour Stick", shade: "02 Cool Sculpt", priceKZT: 8900, desc: "Холодный скульптурирующий тон", img: "images/products/cn02.jpg" },
-
-      // СПАРКЛЫ (Sparkle Eyeshadow)
-      { id: 's01', category: 'sparkle', title: "Sparkle Eyeshadow", shade: "01 Champagne Gold", priceKZT: 6500, desc: "Золотисто-шампанское сияние", img: "images/products/s01.jpg" },
-      { id: 's02', category: 'sparkle', title: "Sparkle Eyeshadow", shade: "02 Rose Diamond", priceKZT: 6500, desc: "Розовый бриллиантовый блеск", img: "images/products/s02.jpg" },
-      { id: 's03', category: 'sparkle', title: "Sparkle Eyeshadow", shade: "03 Silver Star", priceKZT: 6500, desc: "Серебряный кристалличный блеск", img: "images/products/s03.jpg" },
-
-      // ТУШЬ ДЛЯ РЕСНИЦ
-      { id: 'm01', category: 'mascara', title: "Mascara 7.5g", shade: "01 Ink Black", priceKZT: 4800, desc: "Ультрачерный объем и удлинение", img: "images/products/m01.jpg" },
-      { id: 'm02', category: 'mascara', title: "Mascara 7.5g", shade: "02 Deep Brown", priceKZT: 4800, desc: "Насыщенный коричневый взгляд", img: "images/products/m02.jpg" },
-
-      // ПУДРА
-      { id: 'p01', category: 'powder', title: "Mineral Powder 10g", shade: "Translucent", priceKZT: 7800, desc: "Прозрачная бесцветная пудра", img: "images/products/p01.jpg" },
-      { id: 'p02', category: 'powder', title: "Mineral Powder 10g", shade: "Banana Light", priceKZT: 7800, desc: "Освежающий подсвечивающий тон", img: "images/products/p02.jpg" },
-
-      // ГЕЛЬ И ВОСК ДЛЯ БРОВЕЙ
-      { id: 'gw01', category: 'browgel', title: "Brow Gel Wax 15ml", shade: "Transparent Clear", priceKZT: 4200, desc: "Надежная фиксация эффекта ламинирования", img: "images/products/gw01.jpg" },
-
-      // АКСЕССУАРЫ
-      { id: 'pf01', category: 'puff', title: "Beauty Blender Sponge", shade: "Classic Pink", priceKZT: 2200, desc: "Спонж каплевидный", img: "images/products/pf01.jpg" },
-      { id: 'pf02', category: 'puff', title: "Beauty Blender Sponge", shade: "Black Velvet", priceKZT: 2200, desc: "Спонж премиум черный", img: "images/products/pf02.jpg" },
-      { id: 'pf03', category: 'puff', title: "Powder Puff Set", shade: "Set of 2 pcs", priceKZT: 1900, desc: "Набор мягких пуховок", img: "images/products/pf03.jpg" }
+         // Подводка
+      { id: 'el01', category: 'eyeliner', title: "Подводка", shade: "01", priceKZT: 4200, desc: "Лайнер для глаз с тонкой кисточкой, которая позволяет легко и точно рисовать стрелки — от классических до самых креативных.", img: "images/eyeliner_1.webp" },
+      
+        // Тени
+      { id: 'esh01', category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "01", priceKZT: 8400, desc: "Тёплые оттенки", img: "images/eyeshadow-01.webp" },
+      { id: 'esh02', category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "02", priceKZT: 8400, desc: "Холодные оттенки", img: "images/eyeshadow-02.webp" },
+      { id: 'esh03', category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "03", priceKZT: 8400, desc: "Яркие оттенки", img: "images/eyeshadow-03.webp" },
+      
+          // Фиксатор
+      { id: 'fix', category: 'fixer', title: "Фиксатор макияжа 100 мл", shade: "01", priceKZT: 4200, desc: "Финальный штрих, который меняет всё: фиксация макияжа до 24 часов, водостойкая формула, невесомое покрытие без липкости и естественное сияние кожи.", img: "images/fix_1.webp" },
     ];
 
     let cart = {};
@@ -366,12 +413,24 @@
       }
     }
 
+    function handleImgError(img) {
+      if (!img.dataset.triedJpg) {
+        img.dataset.triedJpg = 'true';
+        img.src = img.src.replace(/\.webp$/i, '.jpg');
+      } else if (!img.dataset.triedPng) {
+        img.dataset.triedPng = 'true';
+        img.src = img.src.replace(/\.jpg$/i, '.png');
+      } else {
+        img.src = 'https://via.placeholder.com/150?text=SenSulu';
+      }
+    }
+
     function renderCategories() {
       const container = document.getElementById('cat-carousel');
       container.innerHTML = categories.map(c => `
         <div class="cat-item ${c.id === activeCategory ? 'active' : ''}" onclick="selectCategory('${c.id}')">
           <div class="cat-img-wrapper">
-            <img src="${c.img}" alt="${c.name}" onerror="this.src='https://via.placeholder.com/50?text=S'">
+            <img src="${c.img}" alt="${c.name}" onerror="handleImgError(this)">
           </div>
           <div class="cat-name">${c.name}</div>
         </div>
@@ -415,7 +474,7 @@
         const displayPrice = getConvertedPrice(p.priceKZT);
         return `
           <div class="card">
-            <img src="${p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/150?text=SenSulu'">
+            <img src="${p.img}" alt="${p.title}" onerror="handleImgError(this)">
             <div class="card-content">
               <div>
                 <div class="title">${p.title}</div>
