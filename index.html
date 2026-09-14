@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SenSulu — Каталог</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: #faf9f6;
+      --card-bg: #ffffff;
+      --text-color: #2b2b2b;
+      --accent-color: #b89357;
+      --accent-hover: #9e7b43;
+      --secondary-text: #707070;
+      --border-color: #f0ede6;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 12px;
+      padding-bottom: 90px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 0 0 2px 0;
+      color: var(--accent-color);
+    }
+
+    .header p {
+      font-size: 12px;
+      color: var(--secondary-text);
+      margin: 0 0 10px 0;
+    }
+
+    .currency-picker {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .currency-picker label {
+      font-size: 12px;
+      color: var(--secondary-text);
+    }
+
+    .currency-select {
+      background: #ffffff;
+      border: 1px solid var(--accent-color);
+      color: var(--text-color);
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    /* Карусель категорий */
+    .categories-carousel {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+
+    .categories-carousel::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 65px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+    }
+
+    .cat-item.active {
+      opacity: 1;
+    }
+
+    .cat-img-wrapper {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 6px;
+      transition: border-color 0.2s;
+    }
+
+    .cat-item.active .cat-img-wrapper {
+      border: 2px solid var(--accent-color);
+    }
+
+    .cat-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cat-name {
+      font-size: 10px;
+      text-align: center;
+      color: var(--text-color);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Сетка товаров */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid var(--border-color);
+    }
+
+    .card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      background-color: #ffffff;
+    }
+
+    .card-content {
+      padding: 10px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .title {
+      font-size: 12px;
+      font-weight: 600;
+      margin: 0 0 2px 0;
+      line-height: 1.3;
+    }
+
+    .shade {
+      font-size: 11px;
+      color: var(--accent-color);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .desc {
+      font-size: 10px;
+      color: var(--secondary-text);
+      margin: 0 0 6px 0;
+      line-height: 1.2;
+    }
+
+    .price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 7px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 11px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .cart-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      padding: 12px 16px;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .cart-info {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .cart-btn {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>SEN SULU</h1>
+    <p>Self-love starts with us</p>
+  </div>
+
+  <div class="currency-picker">
+    <label for="currency">Валюта:</label>
+    <select id="currency" class="currency-select" onchange="changeCurrency(this.value)">
+      <option value="KZT">₸ KZT</option>
+      <option value="RUB">₽ RUB</option>
+      <option value="USD">$ USD</option>
+    </select>
+  </div>
+
+  <!-- Категории товаров -->
+  <div class="categories-carousel" id="cat-carousel"></div>
+
+  <!-- Сетка товаров -->
+  <div class="grid" id="product-grid"></div>
+
+  <!-- Панель корзины -->
+  <div class="cart-bar" id="cart-bar">
+    <div class="cart-info">
+      Итого: <span id="total-price">0</span> <span id="cart-currency-symbol">₸</span>
+    </div>
+    <button class="cart-btn" onclick="sendOrder()">Оформить заказ</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    if (tg && tg.expand) tg.expand();
+
+    let exchangeRates = { KZT: 1, RUB: 0.187, USD: 0.00222 };
+    const currencySymbols = { KZT: '₸', RUB: '₽', USD: '$' };
+    let currentCurrency = 'KZT';
+    let activeCategory = 'all';
+
+    const categories = [
+      { id: 'all', name: 'Все товары', img: 'images/cat/all.jpg' },
+      { id: 'blush', name: 'Румяна', img: 'images/cat/blush.jpg' },
+      { id: 'browpencil', name: 'Карандаши бр.', img: 'images/cat/browpencil.jpg' },
+      { id: 'lipliner', name: 'Карандаши губ', img: 'images/cat/lipliner.jpg' },
+      { id: 'gloss', name: 'Блески для губ', img: 'images/cat/gloss.jpg' },
+      { id: 'concealer', name: 'Консилеры', img: 'images/cat/concealer.jpg' },
+      { id: 'contour', name: 'Контуринг', img: 'images/cat/contour.jpg' },
+      { id: 'mascara', name: 'Тушь', img: 'images/cat/mascara.jpg' },
+      { id: 'powder', name: 'Пудра', img: 'images/cat/powder.jpg' },
+      { id: 'sparkle', name: 'Спарклы', img: 'images/cat/sparkle.jpg' },
+      { id: 'browgel', name: 'Гели для бровей', img: 'images/cat/browgel.jpg' },
+      { id: 'puff', name: 'Пуховки и спонжи', img: 'images/cat/puff.jpg' }
+    ];
+
+    // ПОЛНЫЙ КАТАЛОГ С КАЖДЫМ ОТТЕНКОМ
+    const products = [
+      // РУМЯНА В СТИКЕ (7.5g)
+      { id: 'b01', category: 'blush', title: "Blush Stick 7.5g", shade: "01 Petal Glow", priceKZT: 9900, desc: "Нежно-розовый свежий оттенок", img: "images/products/b01.jpg" },
+      { id: 'b02', category: 'blush', title: "Blush Stick 7.5g", shade: "02 Sunrise Glow", priceKZT: 9900, desc: "Теплый персиковый оттенок", img: "images/products/b02.jpg" },
+      { id: 'b03', category: 'blush', title: "Blush Stick 7.5g", shade: "03 Berry Bloom", priceKZT: 9900, desc: "Насыщенный ягодный оттенок", img: "images/products/b03.jpg" },
+      { id: 'b04', category: 'blush', title: "Blush Stick 7.5g", shade: "04 Coral Dust", priceKZT: 9900, desc: "Кораловый сочный оттенок", img: "images/products/b04.jpg" },
+
+      // РУМЯНА МИНИ (4.5g)
+      { id: 'bm01', category: 'blush', title: "Blush Mini 4.5g", shade: "01 Petal Glow", priceKZT: 6900, desc: "Компактная версия румян", img: "images/products/bm01.jpg" },
+      { id: 'bm02', category: 'blush', title: "Blush Mini 4.5g", shade: "02 Sunrise Glow", priceKZT: 6900, desc: "Компактная версия румян", img: "images/products/bm02.jpg" },
+
+      // КАРАНДАШИ ДЛЯ БРОВЕЙ (Slim)
+      { id: 'br01', category: 'browpencil', title: "Brow Pencil Slim", shade: "01 Blonde", priceKZT: 3500, desc: "Светло-русый нейтральный", img: "images/products/br01.jpg" },
+      { id: 'br02', category: 'browpencil', title: "Brow Pencil Slim", shade: "02 Taupe", priceKZT: 3500, desc: "Серо-коричневый универсальный", img: "images/products/br02.jpg" },
+      { id: 'br03', category: 'browpencil', title: "Brow Pencil Slim", shade: "03 Medium Brown", priceKZT: 3500, desc: "Классический коричневый", img: "images/products/br03.jpg" },
+      { id: 'br04', category: 'browpencil', title: "Brow Pencil Slim", shade: "04 Dark Brown", priceKZT: 3500, desc: "Темный глубокий коричневый", img: "images/products/br04.jpg" },
+
+      // КАРАНДАШИ ДЛЯ ГУБ (Lip Liner 0.4g)
+      { id: 'l01', category: 'lipliner', title: "Lip Liner 0.4g", shade: "01 Coffee", priceKZT: 2850, desc: "Глубокий кофейный нюд", img: "images/products/l01.jpg" },
+      { id: 'l02', category: 'lipliner', title: "Lip Liner 0.4g", shade: "02 Dusty Rose", priceKZT: 2850, desc: "Пыльная роза", img: "images/products/l02.jpg" },
+      { id: 'l03', category: 'lipliner', title: "Lip Liner 0.4g", shade: "03 Nude Beige", priceKZT: 2850, desc: "Бежевый натуральный", img: "images/products/l03.jpg" },
+      { id: 'l04', category: 'lipliner', title: "Lip Liner 0.4g", shade: "04 Cinnamon", priceKZT: 2850, desc: "Теплый коричный оттенок", img: "images/products/l04.jpg" },
+      { id: 'l05', category: 'lipliner', title: "Lip Liner 0.4g", shade: "05 Pure Red", priceKZT: 2850, desc: "Классический красный", img: "images/products/l05.jpg" },
+
+      // БЛЕСКИ ДЛЯ ГУБ (Lip Gloss 4.5g)
+      { id: 'g01', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Peachy Pink", priceKZT: 7200, desc: "Персиково-розовый с глянцем", img: "images/products/g01.jpg" },
+      { id: 'g02', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Clear Nude", priceKZT: 7200, desc: "Прозрачный зеркальный блеск", img: "images/products/g02.jpg" },
+      { id: 'g03', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Caramel Kiss", priceKZT: 7200, desc: "Карамельный сочный глянец", img: "images/products/g03.jpg" },
+      { id: 'g04', category: 'gloss', title: "Lip Gloss 4.5g", shade: "Rose Shimmer", priceKZT: 7200, desc: "Розовый с микромикрошиммером", img: "images/products/g04.jpg" },
+
+      // КОНСИЛЕРЫ (Concealer 4.6ml)
+      { id: 'c01', category: 'concealer', title: "Concealer 4.6ml", shade: "01 Fair Ivory", priceKZT: 5200, desc: "Очень светлый с фарфоровым тоном", img: "images/products/c01.jpg" },
+      { id: 'c02', category: 'concealer', title: "Concealer 4.6ml", shade: "02 Light Nude", priceKZT: 5200, desc: "Светло-бежевый нейтральный", img: "images/products/c02.jpg" },
+      { id: 'c03', category: 'concealer', title: "Concealer 4.6ml", shade: "03 Medium Warm", priceKZT: 5200, desc: "Натурально-бежевый с теплом", img: "images/products/c03.jpg" },
+
+      // КОНТУРИНГ (Contour Stick)
+      { id: 'cn01', category: 'contour', title: "Contour Stick", shade: "01 Warm Taupe", priceKZT: 8900, desc: "Правильная правильная тень", img: "images/products/cn01.jpg" },
+      { id: 'cn02', category: 'contour', title: "Contour Stick", shade: "02 Cool Sculpt", priceKZT: 8900, desc: "Холодный скульптурирующий тон", img: "images/products/cn02.jpg" },
+
+      // СПАРКЛЫ (Sparkle Eyeshadow)
+      { id: 's01', category: 'sparkle', title: "Sparkle Eyeshadow", shade: "01 Champagne Gold", priceKZT: 6500, desc: "Золотисто-шампанское сияние", img: "images/products/s01.jpg" },
+      { id: 's02', category: 'sparkle', title: "Sparkle Eyeshadow", shade: "02 Rose Diamond", priceKZT: 6500, desc: "Розовый бриллиантовый блеск", img: "images/products/s02.jpg" },
+      { id: 's03', category: 'sparkle', title: "Sparkle Eyeshadow", shade: "03 Silver Star", priceKZT: 6500, desc: "Серебряный кристалличный блеск", img: "images/products/s03.jpg" },
+
+      // ТУШЬ ДЛЯ РЕСНИЦ
+      { id: 'm01', category: 'mascara', title: "Mascara 7.5g", shade: "01 Ink Black", priceKZT: 4800, desc: "Ультрачерный объем и удлинение", img: "images/products/m01.jpg" },
+      { id: 'm02', category: 'mascara', title: "Mascara 7.5g", shade: "02 Deep Brown", priceKZT: 4800, desc: "Насыщенный коричневый взгляд", img: "images/products/m02.jpg" },
+
+      // ПУДРА
+      { id: 'p01', category: 'powder', title: "Mineral Powder 10g", shade: "Translucent", priceKZT: 7800, desc: "Прозрачная бесцветная пудра", img: "images/products/p01.jpg" },
+      { id: 'p02', category: 'powder', title: "Mineral Powder 10g", shade: "Banana Light", priceKZT: 7800, desc: "Освежающий подсвечивающий тон", img: "images/products/p02.jpg" },
+
+      // ГЕЛЬ И ВОСК ДЛЯ БРОВЕЙ
+      { id: 'gw01', category: 'browgel', title: "Brow Gel Wax 15ml", shade: "Transparent Clear", priceKZT: 4200, desc: "Надежная фиксация эффекта ламинирования", img: "images/products/gw01.jpg" },
+
+      // АКСЕССУАРЫ
+      { id: 'pf01', category: 'puff', title: "Beauty Blender Sponge", shade: "Classic Pink", priceKZT: 2200, desc: "Спонж каплевидный", img: "images/products/pf01.jpg" },
+      { id: 'pf02', category: 'puff', title: "Beauty Blender Sponge", shade: "Black Velvet", priceKZT: 2200, desc: "Спонж премиум черный", img: "images/products/pf02.jpg" },
+      { id: 'pf03', category: 'puff', title: "Powder Puff Set", shade: "Set of 2 pcs", priceKZT: 1900, desc: "Набор мягких пуховок", img: "images/products/pf03.jpg" }
+    ];
+
+    let cart = {};
+
+    async function fetchExchangeRates() {
+      try {
+        const response = await fetch('https://open.er-api.com/v6/latest/KZT');
+        const data = await response.json();
+        if (data && data.rates) {
+          exchangeRates.RUB = data.rates.RUB;
+          exchangeRates.USD = data.rates.USD;
+          renderProducts();
+          updateCart();
+        }
+      } catch (e) {
+        console.warn("API курсов недоступен, используются резервные значения");
+      }
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('cat-carousel');
+      container.innerHTML = categories.map(c => `
+        <div class="cat-item ${c.id === activeCategory ? 'active' : ''}" onclick="selectCategory('${c.id}')">
+          <div class="cat-img-wrapper">
+            <img src="${c.img}" alt="${c.name}" onerror="this.src='https://via.placeholder.com/50?text=S'">
+          </div>
+          <div class="cat-name">${c.name}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectCategory(catId) {
+      activeCategory = catId;
+      renderCategories();
+      renderProducts();
+    }
+
+    function getConvertedPrice(priceKZT) {
+      const converted = priceKZT * exchangeRates[currentCurrency];
+      if (currentCurrency === 'USD') return converted.toFixed(2);
+      if (currentCurrency === 'RUB') return Math.round(converted).toLocaleString();
+      return priceKZT.toLocaleString();
+    }
+
+    function changeCurrency(val) {
+      currentCurrency = val;
+      document.getElementById('cart-currency-symbol').innerText = currencySymbols[val];
+      renderProducts();
+      updateCart();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      const symbol = currencySymbols[currentCurrency];
+
+      const filteredProducts = activeCategory === 'all' 
+        ? products 
+        : products.filter(p => p.category === activeCategory);
+
+      if (filteredProducts.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">В этой категории товаров пока нет</div>`;
+        return;
+      }
+
+      grid.innerHTML = filteredProducts.map(p => {
+        const displayPrice = getConvertedPrice(p.priceKZT);
+        return `
+          <div class="card">
+            <img src="${p.img}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/150?text=SenSulu'">
+            <div class="card-content">
+              <div>
+                <div class="title">${p.title}</div>
+                <div class="shade">${p.shade}</div>
+                <div class="desc">${p.desc}</div>
+              </div>
+              <div>
+                <div class="price">${displayPrice} ${symbol}</div>
+                <button class="btn" onclick="addToCart('${p.id}')">
+                  ${cart[p.id] ? `В корзине (${cart[p.id]})` : '+ Добавить'}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addToCart(id) {
+      cart[id] = (cart[id] || 0) + 1;
+      updateCart();
+      renderProducts();
+    }
+
+    function updateCart() {
+      let totalKZT = 0;
+      for (let id in cart) {
+        const product = products.find(p => p.id === id);
+        if (product) totalKZT += product.priceKZT * cart[id];
+      }
+      document.getElementById('total-price').innerText = getConvertedPrice(totalKZT);
+    }
+
+    function sendOrder() {
+      let orderList = [];
+      let totalKZT = 0;
+      const symbol = currencySymbols[currentCurrency];
+
+      for (let id in cart) {
+        const p = products.find(prod => prod.id === id);
+        if (p) {
+          const itemPriceConverted = getConvertedPrice(p.priceKZT);
+          orderList.push(`${p.title} (${p.shade}) x${cart[id]} — ${itemPriceConverted} ${symbol}`);
+          totalKZT += p.priceKZT * cart[id];
+        }
+      }
+
+      if (orderList.length === 0) {
+        alert("Выберите хотя бы один товар!");
+        return;
+      }
+
+      const totalDisplay = getConvertedPrice(totalKZT);
+      const data = {
+        items: orderList,
+        total: `${totalDisplay} ${symbol}`,
+        currency: currentCurrency,
+        totalKZT: `${totalKZT} ₸`
+      };
+
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify(data));
+        tg.close();
+      } else {
+        alert("Заказ сформирован:\n\n" + orderList.join("\n") + "\n\nИтого: " + totalDisplay + " " + symbol);
+      }
+    }
+
+    renderCategories();
+    renderProducts();
+    fetchExchangeRates();
+  </script>
+</body>
+</html>
