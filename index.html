@@ -22,8 +22,20 @@
       color: var(--text-color);
       margin: 0;
       padding: 12px;
-      padding-bottom: 90px;
+      padding-bottom: 110px;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Скрытие бейджиков Netlify и элементов сторонних оверлеев */
+    [class*="netlify"],
+    [id*="netlify"],
+    iframe[src*="netlify"],
+    .netlify-badge,
+    #netlify-badge {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
 
     .header {
@@ -222,6 +234,8 @@
       justify-content: space-between;
       align-items: center;
       border-top: 1px solid var(--border-color);
+      z-index: 999999 !important;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 
     .cart-info {
@@ -244,7 +258,7 @@
 <body>
 
 <!-- Окно ввода данных клиента перед показом каталога -->
-<div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 16px;">
+<div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000000; padding: 16px;">
   <div style="background: #ffffff; padding: 24px; border-radius: 16px; width: 100%; max-width: 360px; box-sizing: border-box; font-family: inherit;">
     <h3 style="margin: 0 0 8px 0; text-align: center; color: var(--accent-color); font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Контакты доставки</h3>
     <p style="margin: 0 0 16px 0; font-size: 12px; color: var(--secondary-text); text-align: center;">Пожалуйста, укажите ваши данные для оформления заказа</p>
@@ -289,7 +303,7 @@
   </div>
 
   <script>
-    // Вставьте ваш скопированный адрес вебхука из Битрикс24 (со слэшем на конце!)
+    // URL входящего вебхука из Битрикс24
     const BITRIX_WEBHOOK_BASE = "https://sensulu.bitrix24.kz/rest/3629/m1qvcdguyfg7h164/";
 
     const tg = window.Telegram.WebApp;
