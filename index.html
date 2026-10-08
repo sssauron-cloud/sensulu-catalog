@@ -22,20 +22,27 @@
       color: var(--text-color);
       margin: 0;
       padding: 12px;
-      padding-bottom: 110px;
+      padding-bottom: 120px;
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Скрытие бейджиков Netlify и элементов сторонних оверлеев */
+    /* Полное скрытие оверлеев и бэйджей Netlify */
     [class*="netlify"],
     [id*="netlify"],
     iframe[src*="netlify"],
+    netlify-badge,
     .netlify-badge,
-    #netlify-badge {
+    #netlify-badge,
+    div[style*="position: fixed"][style*="bottom"],
+    div[style*="position:absolute"][style*="bottom"] {
       display: none !important;
       visibility: hidden !important;
       opacity: 0 !important;
       pointer-events: none !important;
+      height: 0 !important;
+      width: 0 !important;
+      max-height: 0 !important;
+      overflow: hidden !important;
     }
 
     .header {
@@ -222,17 +229,20 @@
       width: 100%;
     }
 
+    /* Центрированная корзина */
     .cart-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       background: #ffffff;
-      padding: 12px 16px;
+      padding: 10px 16px;
       box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
+      gap: 6px;
       border-top: 1px solid var(--border-color);
       z-index: 999999 !important;
       padding-bottom: max(12px, env(safe-area-inset-bottom));
@@ -241,23 +251,26 @@
     .cart-info {
       font-size: 13px;
       font-weight: 600;
+      text-align: center;
     }
 
     .cart-btn {
       background-color: #27ae60;
       color: white;
       border: none;
-      padding: 10px 16px;
+      padding: 10px 24px;
       border-radius: 8px;
       font-weight: 600;
       font-size: 13px;
       cursor: pointer;
+      width: 100%;
+      max-width: 280px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-<!-- Окно ввода данных клиента перед показом каталога -->
 <div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000000; padding: 16px;">
   <div style="background: #ffffff; padding: 24px; border-radius: 16px; width: 100%; max-width: 360px; box-sizing: border-box; font-family: inherit;">
     <h3 style="margin: 0 0 8px 0; text-align: center; color: var(--accent-color); font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Контакты доставки</h3>
@@ -303,7 +316,6 @@
   </div>
 
   <script>
-    // URL входящего вебхука из Битрикс24
     const BITRIX_WEBHOOK_BASE = "https://sensulu.bitrix24.kz/rest/3629/m1qvcdguyfg7h164/";
 
     const tg = window.Telegram.WebApp;
@@ -520,7 +532,6 @@
       document.getElementById('user-data-modal').style.display = 'none';
     }
 
-    // Интеграция с Битрикс24 через REST API
     async function sendOrder() {
       let selectedItems = [];
       let totalKZT = 0;
@@ -546,7 +557,6 @@
       const tgUsername = tgUser.username ? `@${tgUser.username}` : '';
 
       try {
-        // 1. Создаем Контакт
         const contactRes = await fetch(`${BITRIX_WEBHOOK_BASE}crm.contact.add.json`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -562,7 +572,6 @@
         const contactData = await contactRes.json();
         const contactId = contactData.result;
 
-        // 2. Создаем Сделку
         const dealRes = await fetch(`${BITRIX_WEBHOOK_BASE}crm.deal.add.json`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -580,7 +589,6 @@
         const dealData = await dealRes.json();
         const dealId = dealData.result;
 
-        // 3. Записываем товары в Сделку
         const productRows = selectedItems.map(item => ({
           PRODUCT_NAME: item.product_name,
           PRICE: item.price,
@@ -606,6 +614,25 @@
         alert("Произошла ошибка при отправке заказа. Попробуйте еще раз.");
       }
     }
+
+    // Скрипт активного поиска и удаления плашки из DOM
+    function removeNetlifyBadge() {
+      const badges = document.querySelectorAll('[class*="netlify"], [id*="netlify"], netlify-badge');
+      badges.forEach(el => el.remove());
+
+      const allDivs = document.querySelectorAll('div, a, span');
+      allDivs.forEach(el => {
+        if (el.textContent && el.textContent.includes('Powered by Netlify')) {
+          const container = el.closest('div[style*="fixed"]') || el.closest('div[style*="absolute"]') || el;
+          container.style.setProperty('display', 'none', 'important');
+          container.remove();
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', removeNetlifyBadge);
+    window.addEventListener('load', removeNetlifyBadge);
+    setInterval(removeNetlifyBadge, 500);
 
     renderCategories();
     renderProducts();
