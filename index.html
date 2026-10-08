@@ -33,9 +33,7 @@
     netlify-badge,
     .netlify-badge,
     #netlify-badge,
-    #netlify-badge-content,
-    div[style*="position: fixed"][style*="bottom"],
-    div[style*="position: absolute"][style*="bottom"] {
+    #netlify-badge-content {
       display: none !important;
       visibility: hidden !important;
       opacity: 0 !important;
@@ -231,7 +229,7 @@
       width: 100%;
     }
 
-    /* Нижняя плашка корзины с гарантированным отступом снизу */
+    /* Нижняя плашка корзины */
     .cart-bar {
       position: fixed;
       bottom: 0;
@@ -246,7 +244,7 @@
       justify-content: center;
       gap: 8px;
       border-top: 1px solid var(--border-color);
-      z-index: 2147483647 !important; /* Максимальный z-index */
+      z-index: 2147483647 !important;
       padding-bottom: calc(16px + env(safe-area-inset-bottom));
     }
 
@@ -268,6 +266,12 @@
       width: 100%;
       max-width: 280px;
       text-align: center;
+      transition: background-color 0.2s ease;
+    }
+
+    .cart-btn:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -280,6 +284,9 @@
     
     <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Ваше имя:</label>
     <input type="text" id="cust-name" placeholder="Иван" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
+
+    <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Телефон:</label>
+    <input type="tel" id="cust-phone" placeholder="+7 700 000 00 00" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
 
     <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Страна:</label>
     <input type="text" id="cust-country" placeholder="Казахстан" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
@@ -314,11 +321,13 @@
     <div class="cart-info">
       Итого: <span id="total-price">0</span> <span id="cart-currency-symbol">₸</span>
     </div>
-    <button class="cart-btn" onclick="sendOrder()">Оформить заказ</button>
+    <button class="cart-btn" id="send-order-btn" onclick="sendOrder()">Оформить заказ</button>
   </div>
 
   <script>
     const BITRIX_WEBHOOK_BASE = "https://sensulu.bitrix24.kz/rest/3629/m1qvcdguyfg7h164/";
+    const LINE_ID = 1;      // ID вашей Открытой линии в Битрикс24
+    const CATEGORY_ID = 1;  // ID воронки Битрикс24
 
     const tg = window.Telegram.WebApp;
     if (tg && tg.expand) tg.expand();
@@ -408,7 +417,7 @@
     ];
 
     let cart = {};
-    let customerData = { name: '', country: '', city: '' };
+    let customerData = { name: '', phone: '', country: '', city: '' };
 
     async function fetchExchangeRates() {
       try {
@@ -522,20 +531,30 @@
 
     function saveCustomerProfile() {
       const name = document.getElementById('cust-name').value.trim();
+      const phone = document.getElementById('cust-phone').value.trim();
       const country = document.getElementById('cust-country').value.trim();
       const city = document.getElementById('cust-city').value.trim();
 
-      if (!name || !country || !city) {
-        alert('Пожалуйста, заполните все 3 поля!');
+      if (!name || !city) {
+        alert('Пожалуйста, заполните Имя и Город!');
         return;
       }
 
-      customerData = { name, country, city };
+      customerData = { name, phone, country, city };
       document.getElementById('user-data-modal').style.display = 'none';
     }
 
+    /**
+     * Интегрированная функция отправки заказа в Открытые линии и создание сделки
+     */
     async function sendOrder() {
+      if (!customerData.name || !customerData.city) {
+        document.getElementById('user-data-modal').style.display = 'flex';
+        return;
+      }
+
       let selectedItems = [];
+      let itemsSummaryArr = [];
       let totalKZT = 0;
 
       for (let id in cart) {
@@ -546,6 +565,7 @@
             price: product.priceKZT,
             quantity: cart[id]
           });
+          itemsSummaryArr.push(`- ${product.title} (${product.shade}) x ${cart[id]} шт.`);
           totalKZT += product.priceKZT * cart[id];
         }
       }
@@ -555,43 +575,118 @@
         return;
       }
 
-      const tgUser = tg?.initDataUnsafe?.user || {};
-      const tgUsername = tgUser.username ? `@${tgUser.username}` : '';
+      const sendBtn = document.getElementById('send-order-btn');
+      sendBtn.disabled = true;
+      sendBtn.innerText = 'Отправка...';
+
+      const telegramUser = tg?.initDataUnsafe?.user || {
+        id: Date.now(),
+        first_name: customerData.name || "Клиент",
+        username: ""
+      };
+
+      const textMessage = `🛍 **Новый заказ из каталога!**\n\n` +
+        `👤 Клиент: ${customerData.name || telegramUser.first_name}\n` +
+        `📞 Телефон: ${customerData.phone || 'Не указан'}\n` +
+        `📍 Адрес: ${customerData.country}, ${customerData.city}\n` +
+        `📦 Состав заказа:\n${itemsSummaryArr.join('\n')}\n\n` +
+        `💰 Итого: ${totalKZT.toLocaleString()} KZT`;
 
       try {
-        const contactRes = await fetch(`${BITRIX_WEBHOOK_BASE}crm.contact.add.json`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fields: {
-              NAME: customerData.name || 'Клиент',
-              ADDRESS_CITY: customerData.city,
-              ADDRESS_COUNTRY: customerData.country,
-              COMMENTS: `Telegram: ${tgUsername}`
-            }
-          })
-        });
-        const contactData = await contactRes.json();
-        const contactId = contactData.result;
+        // 1. Отправка в Открытую линию (imconnector.send.messages)
+        let contactId = null;
+        try {
+          const connectorRes = await fetch(`${BITRIX_WEBHOOK_BASE}imconnector.send.messages.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              CONNECTOR: 'telegrambot',
+              LINE: LINE_ID,
+              MESSAGES: [
+                {
+                  user: {
+                    id: telegramUser.id,
+                    name: customerData.name || telegramUser.first_name || 'Клиент',
+                    last_name: telegramUser.last_name || '',
+                    username: telegramUser.username || '',
+                    phone: customerData.phone || ''
+                  },
+                  message: {
+                    id: Date.now(),
+                    date: Math.floor(Date.now() / 1000),
+                    text: textMessage
+                  },
+                  chat: {
+                    id: telegramUser.id,
+                    url: telegramUser.username ? `https://t.me/${telegramUser.username}` : ''
+                  }
+                }
+              ]
+            })
+          });
+          const connectorData = await connectorRes.json();
+          console.log("Результат отправки в Imconnector:", connectorData);
+        } catch (cErr) {
+          console.warn("Ошибка Imconnector, продолжение через стандартные методы CRM:", cErr);
+        }
 
+        // 2. Поиск или создание контакта
+        if (customerData.phone) {
+          const searchContact = await fetch(`${BITRIX_WEBHOOK_BASE}crm.contact.list.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filter: { "PHONE": customerData.phone },
+              select: ["ID"]
+            })
+          });
+          const contactData = await searchContact.json();
+          if (contactData.result && contactData.result.length > 0) {
+            contactId = contactData.result[0].ID;
+          }
+        }
+
+        if (!contactId) {
+          const contactRes = await fetch(`${BITRIX_WEBHOOK_BASE}crm.contact.add.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fields: {
+                NAME: customerData.name || telegramUser.first_name || 'Клиент',
+                PHONE: customerData.phone ? [{ VALUE: customerData.phone, VALUE_TYPE: "WORK" }] : [],
+                ADDRESS_CITY: customerData.city,
+                ADDRESS_COUNTRY: customerData.country,
+                COMMENTS: `Telegram: @${telegramUser.username || ''}`
+              }
+            })
+          });
+          const newContact = await contactRes.json();
+          contactId = newContact.result;
+        }
+
+        // 3. Формирование стадии воронки
+        const stageId = CATEGORY_ID === 0 ? "NEW" : `C${CATEGORY_ID}:NEW`;
+
+        // 4. Создание сделки
         const dealRes = await fetch(`${BITRIX_WEBHOOK_BASE}crm.deal.add.json`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             fields: {
               TITLE: `Заказ из каталога: ${customerData.name} (${customerData.city})`,
+              CATEGORY_ID: CATEGORY_ID,
+              STAGE_ID: stageId,
               CONTACT_ID: contactId,
               OPPORTUNITY: totalKZT,
               CURRENCY_ID: "KZT",
-              CATEGORY_ID: 1,
-              STAGE_ID: "NEW",
-              COMMENTS: `Страна: ${customerData.country}\nГород: ${customerData.city}\nTelegram: ${tgUsername}`
+              COMMENTS: textMessage
             }
           })
         });
         const dealData = await dealRes.json();
         const dealId = dealData.result;
 
+        // 5. Привязка товарных позиций к сделке
         const productRows = selectedItems.map(item => ({
           PRODUCT_NAME: item.product_name,
           PRICE: item.price,
@@ -608,52 +703,57 @@
         });
 
         alert("Спасибо! Ваш заказ успешно оформлен.");
-        
+
         if (tg && tg.close) {
           tg.close();
         }
       } catch (err) {
-        console.error("Ошибка передачи данных в Битрикс24:", err);
+        console.error('Ошибка при обработке заказа:', err);
         alert("Произошла ошибка при отправке заказа. Попробуйте еще раз.");
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerText = 'Оформить заказ';
       }
     }
 
-    // Непрерывный процесс очистки элементов Netlify
+    // Безопасный процесс очистки внешних оверлеев Netlify
     function killNetlifyBadges() {
-      // 1. Поиск элементов в основном DOM
       const selectors = [
         '[class*="netlify"]',
         '[id*="netlify"]',
         'netlify-badge',
-        'iframe[src*="netlify"]',
-        'div[style*="position: fixed"][style*="bottom"]',
-        'div[style*="position: absolute"][style*="bottom"]'
+        'iframe[src*="netlify"]'
       ];
       
       selectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => {
-          if (el.id !== 'cart-bar' && !el.closest('#cart-bar')) {
+          if (el.id !== 'cart-bar' && !el.closest('#cart-bar') && el.id !== 'user-data-modal' && !el.closest('#user-data-modal')) {
             el.remove();
           }
         });
       });
 
-      // 2. Сканирование текста элементов на упоминание "Netlify"
-      document.querySelectorAll('div, iframe, body > *').forEach(el => {
-        if (el.id !== 'cart-bar' && !el.closest('#cart-bar')) {
-          if (el.innerText && el.innerText.includes('Netlify')) {
+      document.querySelectorAll('div, iframe').forEach(el => {
+        if (
+          el !== document.body &&
+          el.id !== 'cart-bar' && 
+          !el.closest('#cart-bar') && 
+          el.id !== 'user-data-modal' && 
+          !el.closest('#user-data-modal') &&
+          !el.closest('.grid') &&
+          !el.closest('.categories-carousel')
+        ) {
+          if (el.innerText && el.innerText.trim() === 'Netlify' && el.children.length === 0) {
             el.remove();
           }
         }
       });
     }
 
-    // Отслеживание динамического изменения DOM
     const observer = new MutationObserver(killNetlifyBadges);
     observer.observe(document.documentElement, {
       childList: true,
-      subtree: true,
-      attributes: true
+      subtree: true
     });
 
     window.addEventListener('DOMContentLoaded', killNetlifyBadges);
