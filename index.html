@@ -22,27 +22,8 @@
       color: var(--text-color);
       margin: 0;
       padding: 12px;
-      padding-bottom: 150px;
+      padding-bottom: 90px;
       -webkit-tap-highlight-color: transparent;
-    }
-
-    /* Агрессивное скрытие плашек Netlify и аналогичных оверлеев */
-    [class*="netlify"],
-    [id*="netlify"],
-    iframe[src*="netlify"],
-    netlify-badge,
-    .netlify-badge,
-    #netlify-badge,
-    #netlify-badge-content {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      height: 0 !important;
-      width: 0 !important;
-      max-height: 0 !important;
-      overflow: hidden !important;
-      transform: scale(0) !important;
     }
 
     .header {
@@ -88,6 +69,7 @@
       outline: none;
     }
 
+    /* Карусель категорий с исправленным тач-скроллом */
     .categories-carousel {
       display: flex;
       gap: 12px;
@@ -98,8 +80,8 @@
       box-sizing: border-box;
       padding: 4px 4px 12px 4px;
       margin-bottom: 12px;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x;
+      -webkit-overflow-scrolling: touch; /* Плавный скролл iOS */
+      touch-action: pan-x;              /* Горизонтальный жест Android */
       scrollbar-width: none;
     }
 
@@ -112,7 +94,7 @@
       flex-direction: column;
       align-items: center;
       width: 68px;
-      flex-shrink: 0;
+      flex-shrink: 0;                  /* Фиксация ширины иконок */
       cursor: pointer;
       opacity: 0.7;
       transition: all 0.2s ease;
@@ -153,10 +135,11 @@
       font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
+      text-overflow: ellipsis;         /* Обрезка длинного текста */
       width: 100%;
     }
 
+    /* Сетка товаров */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -229,7 +212,6 @@
       width: 100%;
     }
 
-    /* Нижняя плашка корзины */
     .cart-bar {
       position: fixed;
       bottom: 0;
@@ -237,56 +219,39 @@
       right: 0;
       background: #ffffff;
       padding: 12px 16px;
-      box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
       border-top: 1px solid var(--border-color);
-      z-index: 2147483647 !important;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
     }
 
     .cart-info {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      text-align: center;
     }
 
     .cart-btn {
       background-color: #27ae60;
       color: white;
       border: none;
-      padding: 12px 24px;
+      padding: 10px 16px;
       border-radius: 8px;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
-      width: 100%;
-      max-width: 280px;
-      text-align: center;
-      transition: background-color 0.2s ease;
-    }
-
-    .cart-btn:disabled {
-      background-color: #95a5a6;
-      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
-
-<div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 2147483647; padding: 16px;">
+<!-- Окно ввода данных клиента перед показом каталога -->
+<div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 16px;">
   <div style="background: #ffffff; padding: 24px; border-radius: 16px; width: 100%; max-width: 360px; box-sizing: border-box; font-family: inherit;">
     <h3 style="margin: 0 0 8px 0; text-align: center; color: var(--accent-color); font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Контакты доставки</h3>
     <p style="margin: 0 0 16px 0; font-size: 12px; color: var(--secondary-text); text-align: center;">Пожалуйста, укажите ваши данные для оформления заказа</p>
     
     <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Ваше имя:</label>
     <input type="text" id="cust-name" placeholder="Иван" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
-
-    <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Телефон:</label>
-    <input type="tel" id="cust-phone" placeholder="+7 700 000 00 00" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
 
     <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Страна:</label>
     <input type="text" id="cust-country" placeholder="Казахстан" style="width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
@@ -299,7 +264,6 @@
     </button>
   </div>
 </div>
-
   <div class="header">
     <h1>SEN SULU</h1>
     <p>Self-love starts with us</p>
@@ -314,20 +278,21 @@
     </select>
   </div>
 
+  <!-- Категории товаров -->
   <div class="categories-carousel" id="cat-carousel"></div>
+
+  <!-- Сетка товаров -->
   <div class="grid" id="product-grid"></div>
 
+  <!-- Панель корзины -->
   <div class="cart-bar" id="cart-bar">
     <div class="cart-info">
       Итого: <span id="total-price">0</span> <span id="cart-currency-symbol">₸</span>
     </div>
-    <button class="cart-btn" id="send-order-btn" onclick="sendOrder()">Оформить заказ</button>
+    <button class="cart-btn" onclick="sendOrder()">Оформить заказ</button>
   </div>
 
   <script>
-    const BITRIX_WEBHOOK_BASE = "https://sensulu.bitrix24.kz/rest/3629/m1qvcdguyfg7h164/";
-    const CATEGORY_ID = 1;  // ID воронки Битрикс24
-
     const tg = window.Telegram.WebApp;
     if (tg && tg.expand) tg.expand();
 
@@ -355,69 +320,102 @@
       { id: 'fixer', name: 'Фиксатор', img: 'images/fixer.webp' },
     ];
 
-    // Добавлено поле bitrixId. Замените 0 на реальные ID товаров из CRM Битрикс24
     const products = [
-      { id: 'm01', bitrixId: 0, category: 'mascara', title: "Тушь 7,5 гр", shade: "01 Чёрный", priceKZT: 4800, desc: "Ультрачерный объем и удлинение", img: "images/maskara-01.webp" },
-      { id: 'm02', bitrixId: 0, category: 'mascara', title: "Тушь 7,5 гр", shade: "02 Светло-коричневый", priceKZT: 4800, desc: "Насыщенный коричневый взгляд", img: "images/maskara-02.webp" },
-      { id: 'm03', bitrixId: 0, category: 'mascara', title: "Тушь 7,5 гр", shade: "03 Тёмно-синий", priceKZT: 4800, desc: "Яркий синий взгляд", img: "images/maskara-03.webp" },
-      { id: 'cn01', bitrixId: 0, category: 'contour', title: "Контуринг", shade: "01 Вечерний макияж", priceKZT: 11900, desc: "Для более выраженного скульптурирования и вечернего макияжа.", img: "images/contour_1.webp" },
-      { id: 'cn02', bitrixId: 0, category: 'contour', title: "Контуринг", shade: "02 Универсальный тон", priceKZT: 11900, desc: "Универсальный, подходит большинству тонов кожи.", img: "images/contour_1.webp" },
-      { id: 'cn03', bitrixId: 0, category: 'contour', title: "Контуринг", shade: "03 Мягкий контсуринг", priceKZT: 11900, desc: "Для мягкого контуринга, светлой кожи и естественного эффекта.", img: "images/contour_1.webp" },
-      { id: 'bm01', bitrixId: 0, category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "01 Пудровый розовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_1.webp" },
-      { id: 'bm02', bitrixId: 0, category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "02 Тёплый нюд", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_2.webp" },
-      { id: 'bm03', bitrixId: 0, category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "03 Сливовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_3.webp" },
-      { id: 'bm04', bitrixId: 0, category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "04 Ягодный красный", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_4.webp" },
-      { id: 'bm05', bitrixId: 0, category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "05 Кораловый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_5.webp" },
-      { id: 'bm06', bitrixId: 0, category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "06 Розовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_6.webp" },
-      { id: 'b01', bitrixId: 0, category: 'blush', title: "Румяна в стике 7.5 гр", shade: "01 Пудровый розовый", priceKZT: 9900, desc: "Пудровый розовый", img: "images/Blush_Stick_1.webp" },
-      { id: 'b02', bitrixId: 0, category: 'blush', title: "Румяна в стике 7.5 гр", shade: "02 Тёплый нюд", priceKZT: 9900, desc: "Тёплый нюд", img: "images/Blush_Stick_1.webp" },
-      { id: 'b03', bitrixId: 0, category: 'blush', title: "Румяна в стике 7.5 гр", shade: "03 Сливовый", priceKZT: 9900, desc: "Сливовый", img: "images/Blush_Stick_1.webp" },
-      { id: 'b04', bitrixId: 0, category: 'blush', title: "Румяна в стике 7.5 гр", shade: "04 Ягодный красный", priceKZT: 9900, desc: "Ягодный красный", img: "images/Blush_Stick_1.webp" },
-      { id: 'b05', bitrixId: 0, category: 'blush', title: "Румяна в стике 7.5 гр", shade: "05 Кораловый", priceKZT: 9900, desc: "Кораловый", img: "images/Blush_Stick_1.webp" },
-      { id: 'b06', bitrixId: 0, category: 'blush', title: "Румяна в стике 7.5 гр", shade: "06 Розовый", priceKZT: 9900, desc: "Розовый", img: "images/Blush_Stick_1.webp" },
-      { id: 'g01', bitrixId: 0, category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "01 Элегантный нюд с лёгким золотисто-шёлковым переливом.", priceKZT: 7200, desc: "Элегантный нюд с лёгким золотисто-шёлковым переливом.", img: "images/gloss01.webp" },
-      { id: 'g02', bitrixId: 0, category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "02 Нежный персиково-розовый оттенок с бархатистой текстурой.", priceKZT: 7200, desc: "Нежный персиково-розовый оттенок с бархатистой текстурой.", img: "images/gloss02.webp" },
-      { id: 'g03', bitrixId: 0, category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "03 Тёплый карамельный нюд с мягким светлым подтоном.", priceKZT: 7200, desc: "Тёплый карамельный нюд с мягким светлым подтоном.", img: "images/gloss03.webp" },
-      { id: 'g04', bitrixId: 0, category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "04 Сочный и выразительный вишнёвый оттенок с ягодным подтоном.", priceKZT: 7200, desc: "Сочный и выразительный вишнёвый оттенок с ягодным подтоном", img: "images/gloss04.webp" },
-      { id: 'g05', bitrixId: 0, category: 'gloss', title: "Сет из мини-блесков (4 шт.)", shade: "Сет из мини-блесков (4 шт.)", priceKZT: 7200, desc: "Glossy Gems — сет из 4 мини-блесков: лёгкая нелипкая текстура и деликатный блеск. Оттенки: 01 Silk Kiss, 02 Peach Velvet, 03 Caramel Souffle, 04 Cherry Bomb.", img: "images/gloss05.webp" },
-      { id: 'l01', bitrixId: 0, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "01 Глубокий, насыщенный тёмно-шоколадный оттенок.", priceKZT: 2850, desc: "Глубокий, насыщенный тёмно-шоколадный оттенок.", img: "images/lipliner_01.webp" },
-      { id: 'l02', bitrixId: 0, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "02 Тёплый кофейный оттенок с мягким финишем.", priceKZT: 2850, desc: "Тёплый кофейный оттенок с мягким финишем.", img: "images/lipliner_02.webp" },
-      { id: 'l03', bitrixId: 0, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "03 Классический орехово-коричневый нюд.", priceKZT: 2850, desc: "Классический орехово-коричневый нюд.", img: "images/lipliner_03.webp" },
-      { id: 'l04', bitrixId: 0, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "04 Пряный тёплый оттенок с корично-красным подтоном.", priceKZT: 2850, desc: "Пряный тёплый оттенок с корично-красным подтоном.", img: "images/lipliner_04.webp" },
-      { id: 'l05', bitrixId: 0, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "05 Нежный нюд с розовым подтоном.", priceKZT: 2850, desc: "05 Нежный нюд с розовым подтоном.", img: "images/lipliner_05.webp" },
-      { id: 'l06', bitrixId: 0, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "06 Тёплый, насыщенный нюд с красновато-коричневым оттенком.", priceKZT: 2850, desc: "Тёплый, насыщенный нюд с красновато-коричневым оттенком.", img: "images/lipliner_06.webp" },
-      { id: 'l07', bitrixId: 0, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "07 Самый светлый оттенок в линейке - нежный персиково-розовый нюд.", priceKZT: 2850, desc: "Самый светлый оттенок в линейке - нежный персиково-розовый нюд.", img: "images/lipliner_07.webp" },
-      { id: 's01', bitrixId: 0, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "01", priceKZT: 6500, desc: "Холодное серебряное сияние с эффектом влажной кожи.", img: "images/sparkle_01.webp" },
-      { id: 's02', bitrixId: 0, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "02", priceKZT: 6500, desc: "Тёплое золотистое мерцание с мягким отражением.", img: "images/sparkle_02.webp" },
-      { id: 's03', bitrixId: 0, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "03", priceKZT: 6500, desc: "Спокойный песочно-бронзовый оттенок с глубоким сатиновым блеском.", img: "images/sparkle_03.webp" },
-      { id: 's04', bitrixId: 0, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "04", priceKZT: 6500, desc: "Яркое розово-персиковое сияние с шимерной текстурой.", img: "images/sparkle_04.webp" },
-      { id: 's05', bitrixId: 0, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "05", priceKZT: 6500, desc: "Тёплый персиковый оттенок с мягким золотистым свечением.", img: "images/sparkle_05.webp" },
-      { id: 's06', bitrixId: 0, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "06", priceKZT: 6500, desc: "Янтарное сияние с насыщенным мягким металликом.", img: "images/sparkle_06.webp" },
-      { id: 'c01', bitrixId: 0, category: 'concealer', title: "Консилер 4.6 мл", shade: "01", priceKZT: 5200, desc: "Светлый оттенок с молочным подтоном.", img: "images/concealer-01.webp" },
-      { id: 'c02', bitrixId: 0, category: 'concealer', title: "Консилер 4.6 мл", shade: "02", priceKZT: 5200, desc: "Нейтральный светло-бежевый оттенок, который естественно сливается с кожей.", img: "images/concealer-02.webp" },
-      { id: 'c03', bitrixId: 0, category: 'concealer', title: "Консилер 4.6 мл", shade: "03", priceKZT: 5200, desc: "Натуральный бежевый оттенок для тёплого тона кожи.", img: "images/concealer-03.webp" },
-      { id: 'p01', bitrixId: 0, category: 'powder', title: "Минеральная пудра 10 гр", shade: "01", priceKZT: 7800, desc: "Прозрачный оттенок. Универсальный, адаптируется к любому тону кожи, фиксирует макияж и придаёт матовость.", img: "images/powder-01.webp" },
-      { id: 'p02', bitrixId: 0, category: 'powder', title: "Минеральная пудра 10 гр", shade: "02", priceKZT: 7800, desc: "Более тёмный оттенок. Подходит для средних и тёплых оттенков кожи, создаёт естественный финиш без эффекта маски.", img: "images/powder-02.webp" },
-      { id: 'br01', bitrixId: 0, category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "01", priceKZT: 3500, desc: "Графитовый оттенок. Подходит для тех, кто предпочитает насыщенные и выразительные брови.", img: "images/browpencil-01.webp" },
-      { id: 'br02', bitrixId: 0, category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "02", priceKZT: 3500, desc: "Тёмно-коричневый оттенок. Идеален для брюнеток и обладательниц тёмных бровей.", img: "images/browpencil-02.webp" },
-      { id: 'br03', bitrixId: 0, category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "03", priceKZT: 3500, desc: "Светло-коричневый оттенок. Отличный вариант для блондинок и светло-русых.", img: "images/browpencil-03.webp" },
-      { id: 'br04', bitrixId: 0, category: 'browpencil', title: "Кисточка для геля со шпателем", shade: "04", priceKZT: 1800, desc: "Удобный инструмент для укладки бровей. Тонкая кисть равномерно распределяет средство, а шпатель помогает создать аккуратную и естественную форму.", img: "images/browpencil-04.webp" },
-      { id: 'pf01', bitrixId: 0, category: 'puff', title: "Пуховки", shade: "Пуховки", priceKZT: 2200, desc: "Мягкая, бархатистая текстура пуховки равномерно наносит пудру, создавая естественное и невесомое покрытие.", img: "images/puff_1.webp" },
-      { id: 'pf02', bitrixId: 0, category: 'puff', title: "Бьюти блендер", shade: "Бьюти блендер", priceKZT: 2200, desc: "Гипоаллергенный бьюти-блендер без латекса обеспечивает ровное нанесение без разводов.", img: "images/puff_2.webp" },
-      { id: 'gw01', bitrixId: 0, category: 'browgel', title: "Гель воск для бровей 50 мл", shade: "01", priceKZT: 6750, desc: "Фиксирует волоски на 24 часа, сохраняя их естественный внешний вид и создавая эффект ламинирования", img: "images/browgel-01.webp" },
-      { id: 'gw02', bitrixId: 0, category: 'browgel', title: "Гель воск для бровей 15 мл", shade: "02", priceKZT: 4200, desc: "Фиксирует и укладывает волоски бровей, создавая естественный и стойкий эффект.", img: "images/browgel-02.webp" },
-      { id: 'gw03', bitrixId: 0, category: 'browgel', title: "Гель воск для бровей travel версия 10 мл", shade: "03", priceKZT: 4600, desc: "Надежная фиксация эффекта ламинирования", img: "images/browgel-03.webp" },
-      { id: 'bb01', bitrixId: 0, category: 'bbcream', title: "BB крем 50 мл", shade: "01", priceKZT: 7800, desc: "Светлый оттенок. Идеален для светлой кожи, создаёт свежий и натуральный финиш.", img: "images/bbcrem.webp" },
-      { id: 'bb02', bitrixId: 0, category: 'bbcream', title: "BB крем 50 мл", shade: "02", priceKZT: 7800, desc: "Более тёмный оттенок. Подходит для средних тонов кожи, придавая ей здоровый и ровный оттенок.", img: "images/bbcrem.webp" },
-      { id: 'el01', bitrixId: 0, category: 'eyeliner', title: "Подводка", shade: "01", priceKZT: 4200, desc: "Лайнер для глаз с тонкой кисточкой, которая позволяет легко и точно рисовать стрелки — от классических до самых креативных.", img: "images/eyeliner_1.webp" },
-      { id: 'esh01', bitrixId: 0, category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "01", priceKZT: 8400, desc: "Тёплые оттенки", img: "images/eyeshadow-01.webp" },
-      { id: 'esh02', bitrixId: 0, category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "02", priceKZT: 8400, desc: "Холодные оттенки", img: "images/eyeshadow-02.webp" },
-      { id: 'esh03', bitrixId: 0, category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "03", priceKZT: 8400, desc: "Яркие оттенки", img: "images/eyeshadow-03.webp" },
-      { id: 'fix', bitrixId: 0, category: 'fixer', title: "Фиксатор макияжа 100 мл", shade: "01", priceKZT: 4200, desc: "Финальный штрих, который меняет всё: фиксация макияжа до 24 часов, водостойкая формула, невесомое покрытие без липкости и естественное сияние кожи.", img: "images/fix_1.webp" },
+     // ТУШЬ ДЛЯ РЕСНИЦ
+      { id: 'm01', category: 'mascara', title: "Тушь 7,5 гр", shade: "01 Чёрный", priceKZT: 4800, desc: "Ультрачерный объем и удлинение", img: "images/maskara-01.webp" },
+      { id: 'm02', category: 'mascara', title: "Тушь 7,5 гр", shade: "02 Светло-коричневый", priceKZT: 4800, desc: "Насыщенный коричневый взгляд", img: "images/maskara-02.webp" },
+      { id: 'm03', category: 'mascara', title: "Тушь 7,5 гр", shade: "03 Тёмно-синий", priceKZT: 4800, desc: "Яркий синий взгляд", img: "images/maskara-03.webp" },
+
+       // КОНТУРИНГ (Contour Stick)
+      { id: 'cn01', category: 'contour', title: "Контуринг", shade: "01 Вечерний макияж", priceKZT: 11900, desc: "Для более выраженного скульптурирования и вечернего макияжа.", img: "images/contour_1.webp" },
+      { id: 'cn02', category: 'contour', title: "Контуринг", shade: "02 Универсальный тон", priceKZT: 11900, desc: "Универсальный, подходит большинству тонов кожи.", img: "images/contour_1.webp" },
+      { id: 'cn03', category: 'contour', title: "Контуринг", shade: "03 Мягкий контсуринг", priceKZT: 11900, desc: "Для мягкого контуринга, светлой кожи и естественного эффекта.", img: "images/contour_1.webp" },
+
+      // РУМЯНА МИНИ (4.5g)
+      { id: 'bm01', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "01 Пудровый розовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_1.webp" },
+      { id: 'bm02', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "02 Тёплый нюд", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_2.webp" },
+      { id: 'bm03', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "03 Сливовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_3.webp" },
+      { id: 'bm04', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "04 Ягодный красный", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_4.webp" },
+      { id: 'bm05', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "05 Кораловый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_5.webp" },
+      { id: 'bm06', category: 'blush', title: "Румяна мини версия 4.5 гр", shade: "06 Розовый", priceKZT: 6900, desc: "Компактная версия румян", img: "images/blush_6.webp" },
+     
+     
+
+      // РУМЯНА В СТИКЕ (7.5g)
+      { id: 'b01', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "01 Пудровый розовый", priceKZT: 9900, desc: "Пудровый розовый", img: "images/Blush_Stick_1.webp" },
+      { id: 'b02', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "02 Тёплый нюд", priceKZT: 9900, desc: "Тёплый нюд", img: "images/Blush_Stick_1.webp" },
+      { id: 'b03', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "03 Сливовый", priceKZT: 9900, desc: "Сливовый", img: "images/Blush_Stick_1.webp" },
+      { id: 'b04', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "04 Ягодный красный", priceKZT: 9900, desc: "Ягодный красный", img: "images/Blush_Stick_1.webp" },
+      { id: 'b05', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "05 Кораловый", priceKZT: 9900, desc: "Кораловый", img: "images/Blush_Stick_1.webp" },
+      { id: 'b06', category: 'blush', title: "Румяна в стике 7.5 гр", shade: "06 Розовый", priceKZT: 9900, desc: "Розовый", img: "images/Blush_Stick_1.webp" },
+
+       // БЛЕСКИ ДЛЯ ГУБ (Блеск для губ 4,5 гр)
+      { id: 'g01', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "01 Элегантный нюд с лёгким золотисто-шёлковым переливом.", priceKZT: 7200, desc: "Элегантный нюд с лёгким золотисто-шёлковым переливом.", img: "images/gloss01.webp" },
+      { id: 'g02', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "02 Нежный персиково-розовый оттенок с бархатистой текстурой.", priceKZT: 7200, desc: "Нежный персиково-розовый оттенок с бархатистой текстурой.", img: "images/gloss02.webp" },
+      { id: 'g03', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "03 Тёплый карамельный нюд с мягким светлым подтоном.", priceKZT: 7200, desc: "Тёплый карамельный нюд с мягким светлым подтоном.", img: "images/gloss03.webp" },
+      { id: 'g04', category: 'gloss', title: "Блеск для губ 4,5 гр", shade: "04 Сочный и выразительный вишнёвый оттенок с ягодным подтоном.", priceKZT: 7200, desc: "Сочный и выразительный вишнёвый оттенок с ягодным подтоном", img: "images/gloss04.webp" },
+      { id: 'g05', category: 'gloss', title: "Сет из мини-блесков (4 шт.)", shade: "Сет из мини-блесков (4 шт.)", priceKZT: 7200, desc: "Glossy Gems — сет из 4 мини-блесков: лёгкая нелипкая текстура и деликатный блеск. Оттенки: 01 Silk Kiss, 02 Peach Velvet, 03 Caramel Souffle, 04 Cherry Bomb.", img: "images/gloss05.webp" },
+
+       // КАРАНДАШИ ДЛЯ ГУБ (Lip Liner 0.4g)
+      { id: 'l01', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "01 Глубокий, насыщенный тёмно-шоколадный оттенок.", priceKZT: 2850, desc: "Глубокий, насыщенный тёмно-шоколадный оттенок.", img: "images/lipliner_01.webp" },
+      { id: 'l02', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "02 Тёплый кофейный оттенок с мягким финишем.", priceKZT: 2850, desc: "Тёплый кофейный оттенок с мягким финишем.", img: "images/lipliner_02.webp" },
+      { id: 'l03', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "03 Классический орехово-коричневый нюд.", priceKZT: 2850, desc: "Классический орехово-коричневый нюд.", img: "images/lipliner_03.webp" },
+      { id: 'l04', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "04 Пряный тёплый оттенок с корично-красным подтоном.", priceKZT: 2850, desc: "Пряный тёплый оттенок с корично-красным подтоном.", img: "images/lipliner_04.webp" },
+      { id: 'l05', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "05 Нежный нюд с розовым подтоном.", priceKZT: 2850, desc: "05 Нежный нюд с розовым подтоном.", img: "images/lipliner_05.webp" },
+      { id: 'l06', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "06 Тёплый, насыщенный нюд с красновато-коричневым оттенком.", priceKZT: 2850, desc: "Тёплый, насыщенный нюд с красновато-коричневым оттенком.", img: "images/lipliner_06.webp" },
+      { id: 'l07', category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "07 Самый светлый оттенок в линейке - нежный персиково-розовый нюд.", priceKZT: 2850, desc: "Самый светлый оттенок в линейке - нежный персиково-розовый нюд.", img: "images/lipliner_07.webp" },
+
+       // СПАРКЛЫ (Sparkle Eyeshadow)
+      { id: 's01', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "01", priceKZT: 6500, desc: "Холодное серебряное сияние с эффектом влажной кожи.", img: "images/sparkle_01.webp" },
+      { id: 's02', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "02", priceKZT: 6500, desc: "Тёплое золотистое мерцание с мягким отражением.", img: "images/sparkle_02.webp" },
+      { id: 's03', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "03", priceKZT: 6500, desc: "Спокойный песочно-бронзовый оттенок с глубоким сатиновым блеском.", img: "images/sparkle_03.webp" },
+      { id: 's04', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "04", priceKZT: 6500, desc: "Яркое розово-персиковое сияние с шимерной текстурой.", img: "images/sparkle_04.webp" },
+      { id: 's05', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "05", priceKZT: 6500, desc: "Тёплый персиковый оттенок с мягким золотистым свечением.", img: "images/sparkle_05.webp" },
+      { id: 's06', category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "06", priceKZT: 6500, desc: "Янтарное сияние с насыщенным мягким металликом.", img: "images/sparkle_06.webp" },
+
+       // КОНСИЛЕРЫ (Concealer 4.6ml)
+      { id: 'c01', category: 'concealer', title: "Консилер 4.6 мл", shade: "01", priceKZT: 5200, desc: "Светлый оттенок с молочным подтоном.", img: "images/concealer-01.webp" },
+      { id: 'c02', category: 'concealer', title: "Консилер 4.6 мл", shade: "02", priceKZT: 5200, desc: "Нейтральный светло-бежевый оттенок, который естественно сливается с кожей.", img: "images/concealer-02.webp" },
+      { id: 'c03', category: 'concealer', title: "Консилер 4.6 мл", shade: "03", priceKZT: 5200, desc: "Натуральный бежевый оттенок для тёплого тона кожи.", img: "images/concealer-03.webp" },
+
+
+       // ПУДРА
+      { id: 'p01', category: 'powder', title: "Минеральная пудра 10 гр", shade: "01", priceKZT: 7800, desc: "Прозрачный оттенок. Универсальный, адаптируется к любому тону кожи, фиксирует макияж и придаёт матовость.", img: "images/powder-01.webp" },
+      { id: 'p02', category: 'powder', title: "Минеральная пудра 10 гр", shade: "02", priceKZT: 7800, desc: "Более тёмный оттенок. Подходит для средних и тёплых оттенков кожи, создаёт естественный финиш без эффекта маски.", img: "images/powder-02.webp" },
+
+
+      // КАРАНДАШИ ДЛЯ БРОВЕЙ (Slim)
+      { id: 'br01', category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "01", priceKZT: 3500, desc: "Графитовый оттенок. Подходит для тех, кто предпочитает насыщенные и выразительные брови.", img: "images/browpencil-01.webp" },
+      { id: 'br02', category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "02", priceKZT: 3500, desc: "Тёмно-коричневый оттенок. Идеален для брюнеток и обладательниц тёмных бровей.", img: "images/browpencil-02.webp" },
+      { id: 'br03', category: 'browpencil', title: "Карандаш для бровей 4гр", shade: "03", priceKZT: 3500, desc: "Светло-коричневый оттенок. Отличный вариант для блондинок и светло-русых.", img: "images/browpencil-03.webp" },
+      { id: 'br04', category: 'browpencil', title: "Кисточка для геля со шпателем", shade: "04", priceKZT: 1800, desc: "Удобный инструмент для укладки бровей. Тонкая кисть равномерно распределяет средство, а шпатель помогает создать аккуратную и естественную форму.", img: "images/browpencil-04.webp" },
+
+      // ПУХОВКА
+      { id: 'pf01', category: 'puff', title: "Пуховки", shade: "Пуховки", priceKZT: 2200, desc: "Мягкая, бархатистая текстура пуховки равномерно наносит пудру, создавая естественное и невесомое покрытие.", img: "images/puff_1.webp" },
+      { id: 'pf02', category: 'puff', title: "Бьюти блендер", shade: "Бьюти блендер", priceKZT: 2200, desc: "Гипоаллергенный бьюти-блендер без латекса обеспечивает ровное нанесение без разводов.", img: "images/puff_2.webp" },
+             
+      // ГЕЛЬ ДЛЯ БРОВЕЙ
+      { id: 'gw01', category: 'browgel', title: "Гель воск для бровей 50 мл", shade: "01", priceKZT: 6750, desc: "Фиксирует волоски на 24 часа, сохраняя их естественный внешний вид и создавая эффект ламинирования", img: "images/browgel-01.webp" },
+      { id: 'gw02', category: 'browgel', title: "Гель воск для бровей 15 мл", shade: "02", priceKZT: 4200, desc: "Фиксирует и укладывает волоски бровей, создавая естественный и стойкий эффект.", img: "images/browgel-02.webp" },
+      { id: 'gw03', category: 'browgel', title: "Гель воск для бровей travel версия 10 мл", shade: "03", priceKZT: 4600, desc: "Надежная фиксация эффекта ламинирования", img: "images/browgel-03.webp" },
+
+       // BB крем
+      { id: 'bb01', category: 'bbcream', title: "BB крем 50 мл", shade: "01", priceKZT: 7800, desc: "Светлый оттенок. Идеален для светлой кожи, создаёт свежий и натуральный финиш.", img: "images/bbcrem.webp" },
+      { id: 'bb02', category: 'bbcream', title: "BB крем 50 мл", shade: "02", priceKZT: 7800, desc: "Более тёмный оттенок. Подходит для средних тонов кожи, придавая ей здоровый и ровный оттенок.", img: "images/bbcrem.webp" },
+
+         // Подводка
+      { id: 'el01', category: 'eyeliner', title: "Подводка", shade: "01", priceKZT: 4200, desc: "Лайнер для глаз с тонкой кисточкой, которая позволяет легко и точно рисовать стрелки — от классических до самых креативных.", img: "images/eyeliner_1.webp" },
+      
+        // Тени
+      { id: 'esh01', category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "01", priceKZT: 8400, desc: "Тёплые оттенки", img: "images/eyeshadow-01.webp" },
+      { id: 'esh02', category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "02", priceKZT: 8400, desc: "Холодные оттенки", img: "images/eyeshadow-02.webp" },
+      { id: 'esh03', category: 'eyeshadow', title: "Тени для век 1.5 гр", shade: "03", priceKZT: 8400, desc: "Яркие оттенки", img: "images/eyeshadow-03.webp" },
+      
+          // Фиксатор
+      { id: 'fix', category: 'fixer', title: "Фиксатор макияжа 100 мл", shade: "01", priceKZT: 4200, desc: "Финальный штрих, который меняет всё: фиксация макияжа до 24 часов, водостойкая формула, невесомое покрытие без липкости и естественное сияние кожи.", img: "images/fix_1.webp" },
     ];
 
     let cart = {};
-    let customerData = { name: '', phone: '', country: '', city: '' };
 
     async function fetchExchangeRates() {
       try {
@@ -529,199 +527,97 @@
       document.getElementById('total-price').innerText = getConvertedPrice(totalKZT);
     }
 
+// Переменная для хранения данных клиента
+    let customerData = { name: '', country: '', city: '' };
+
+    // 1. Функция валидации и сохранения профиля
     function saveCustomerProfile() {
       const name = document.getElementById('cust-name').value.trim();
-      const phone = document.getElementById('cust-phone').value.trim();
       const country = document.getElementById('cust-country').value.trim();
       const city = document.getElementById('cust-city').value.trim();
 
-      if (!name || !city) {
-        alert('Пожалуйста, заполните Имя и Город!');
+      if (!name || !country || !city) {
+        alert('Пожалуйста, заполните все 3 поля!');
         return;
       }
 
-      customerData = { name, phone, country, city };
+      customerData = { name, country, city };
       document.getElementById('user-data-modal').style.display = 'none';
     }
 
+    // 2. Обновленная функция отправки заказа в Telegram и Битрикс24
     async function sendOrder() {
-      if (!customerData.name || !customerData.city) {
-        document.getElementById('user-data-modal').style.display = 'flex';
-        return;
-      }
-
-      let selectedItems = [];
-      let itemsSummaryArr = [];
+      let orderList = [];
       let totalKZT = 0;
+      const symbol = currencySymbols[currentCurrency];
 
       for (let id in cart) {
-        const product = products.find(p => p.id === id);
-        if (product && cart[id] > 0) {
-          selectedItems.push({
-            bitrix_id: product.bitrixId || 0,
-            product_name: `${product.title} (${product.shade})`,
-            price: product.priceKZT,
-            quantity: cart[id]
-          });
-          itemsSummaryArr.push(`- ${product.title} (${product.shade}) x ${cart[id]} шт.`);
-          totalKZT += product.priceKZT * cart[id];
+        const p = products.find(prod => prod.id === id);
+        if (p) {
+          const itemPriceConverted = getConvertedPrice(p.priceKZT);
+          orderList.push(`${p.title} (${p.shade}) x${cart[id]} — ${itemPriceConverted} ${symbol}`);
+          totalKZT += p.priceKZT * cart[id];
         }
       }
 
-      if (selectedItems.length === 0) {
+      if (orderList.length === 0) {
         alert("Выберите хотя бы один товар!");
         return;
       }
 
-      const sendBtn = document.getElementById('send-order-btn');
-      sendBtn.disabled = true;
-      sendBtn.innerText = 'Отправка...';
+      const totalDisplay = getConvertedPrice(totalKZT);
+      
+      // Данные пользователя Telegram
+      const tgUser = tg?.initDataUnsafe?.user || {};
+      const tgUsername = tgUser.username ? `@${tgUser.username}` : 'не указан';
 
-      const telegramUser = tg?.initDataUnsafe?.user || {
-        id: Date.now(),
-        first_name: customerData.name || "Клиент",
-        username: ""
+      // Формируем payload для Bitrix24 REST API
+      const bitrixPayload = {
+        fields: {
+          TITLE: `Заказ из WebApp: ${customerData.name} (${customerData.city})`,
+          OPPORTUNITY: totalKZT,
+          CURRENCY_ID: "KZT",
+          COMMENTS: `=== ДАННЫЕ КЛИЕНТА ===\n` +
+                    `Имя: ${customerData.name}\n` +
+                    `Страна: ${customerData.country}\n` +
+                    `Город: ${customerData.city}\n` +
+                    `Telegram: ${tgUsername}\n\n` +
+                    `=== СОСТАВ ЗАКАЗА ===\n` +
+                    orderList.join('\n') + `\n\n` +
+                    `Итого: ${totalDisplay} ${symbol} (${totalKZT} KZT)`
+        }
       };
 
-      const textMessage = `🛍 **Новый заказ из каталога!**\n\n` +
-        `👤 Клиент: ${customerData.name || telegramUser.first_name}\n` +
-        `📞 Телефон: ${customerData.phone || 'Не указан'}\n` +
-        `📍 Адрес: ${customerData.country}, ${customerData.city}\n` +
-        `📦 Состав заказа:\n${itemsSummaryArr.join('\n')}\n\n` +
-        `💰 Итого: ${totalKZT.toLocaleString()} KZT`;
+      // Входящий вебхук Bitrix24 (укажите ваш URL)
+      const bitrixWebhookUrl = "https://YOUR_BITRIX24_DOMAIN.bitrix24.kz/rest/1/YOUR_WEBHOOK_CODE/crm.deal.add.json";
 
       try {
-        let contactId = null;
-
-        // 1. Поиск или создание контакта
-        if (customerData.phone) {
-          const searchContact = await fetch(`${BITRIX_WEBHOOK_BASE}crm.contact.list.json`, {
+        if (!bitrixWebhookUrl.includes("YOUR_BITRIX24_DOMAIN")) {
+          await fetch(bitrixWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              filter: { "PHONE": customerData.phone },
-              select: ["ID"]
-            })
+            body: JSON.stringify(bitrixPayload)
           });
-          const contactData = await searchContact.json();
-          if (contactData.result && contactData.result.length > 0) {
-            contactId = contactData.result[0].ID;
-          }
         }
 
-        if (!contactId) {
-          const contactRes = await fetch(`${BITRIX_WEBHOOK_BASE}crm.contact.add.json`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fields: {
-                NAME: customerData.name || telegramUser.first_name || 'Клиент',
-                PHONE: customerData.phone ? [{ VALUE: customerData.phone, VALUE_TYPE: "WORK" }] : [],
-                ADDRESS_CITY: customerData.city,
-                ADDRESS_COUNTRY: customerData.country,
-                COMMENTS: `Telegram: @${telegramUser.username || ''}`
-              }
-            })
-          });
-          const newContact = await contactRes.json();
-          contactId = newContact.result;
-        }
+        const telegramData = {
+          customer: customerData,
+          items: orderList,
+          total: `${totalDisplay} ${symbol}`,
+          totalKZT: `${totalKZT} ₸`
+        };
 
-        // 2. Формирование стадии воронки
-        const stageId = CATEGORY_ID === 0 ? "NEW" : `C${CATEGORY_ID}:NEW`;
-
-        // 3. Создание сделки
-        const dealRes = await fetch(`${BITRIX_WEBHOOK_BASE}crm.deal.add.json`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fields: {
-              TITLE: `Заказ из каталога: ${customerData.name} (${customerData.city})`,
-              CATEGORY_ID: CATEGORY_ID,
-              STAGE_ID: stageId,
-              CONTACT_ID: contactId,
-              OPPORTUNITY: totalKZT,
-              CURRENCY_ID: "KZT",
-              COMMENTS: textMessage
-            }
-          })
-        });
-        const dealData = await dealRes.json();
-        const dealId = dealData.result;
-
-        // 4. Привязка товарных позиций к сделке (с привязкой PRODUCT_ID к каталогу CRM)
-        const productRows = selectedItems.map(item => ({
-          PRODUCT_ID: item.bitrix_id,
-          PRODUCT_NAME: item.product_name,
-          PRICE: item.price,
-          QUANTITY: item.quantity
-        }));
-
-        await fetch(`${BITRIX_WEBHOOK_BASE}crm.deal.productrows.set.json`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: dealId,
-            rows: productRows
-          })
-        });
-
-        alert("Спасибо! Ваш заказ успешно оформлен.");
-
-        if (tg && tg.close) {
+        if (tg && tg.sendData) {
+          tg.sendData(JSON.stringify(telegramData));
           tg.close();
+        } else {
+          alert("Заказ принят!\n\n" + bitrixPayload.fields.COMMENTS);
         }
       } catch (err) {
-        console.error('Ошибка при обработке заказа:', err);
+        console.error("Ошибка отправки заказа:", err);
         alert("Произошла ошибка при отправке заказа. Попробуйте еще раз.");
-      } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerText = 'Оформить заказ';
       }
     }
-
-    // Безопасный процесс очистки внешних оверлеев Netlify
-    function killNetlifyBadges() {
-      const selectors = [
-        '[class*="netlify"]',
-        '[id*="netlify"]',
-        'netlify-badge',
-        'iframe[src*="netlify"]'
-      ];
-      
-      selectors.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => {
-          if (el.id !== 'cart-bar' && !el.closest('#cart-bar') && el.id !== 'user-data-modal' && !el.closest('#user-data-modal')) {
-            el.remove();
-          }
-        });
-      });
-
-      document.querySelectorAll('div, iframe').forEach(el => {
-        if (
-          el !== document.body &&
-          el.id !== 'cart-bar' && 
-          !el.closest('#cart-bar') && 
-          el.id !== 'user-data-modal' && 
-          !el.closest('#user-data-modal') &&
-          !el.closest('.grid') &&
-          !el.closest('.categories-carousel')
-        ) {
-          if (el.innerText && el.innerText.trim() === 'Netlify' && el.children.length === 0) {
-            el.remove();
-          }
-        }
-      });
-    }
-
-    const observer = new MutationObserver(killNetlifyBadges);
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true
-    });
-
-    window.addEventListener('DOMContentLoaded', killNetlifyBadges);
-    window.addEventListener('load', killNetlifyBadges);
 
     renderCategories();
     renderProducts();
