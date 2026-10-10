@@ -574,14 +574,13 @@
       const tgUser = tg?.initDataUnsafe?.user || {};
       const tgUsername = tgUser.username ? `@${tgUser.username}` : 'не указан';
 
-      // 1. Базовый URL вашего вебхука (без указания метода в конце)
-      // Пример: https://your-domain.bitrix24.kz/rest/1/webhook_code/
-      const bitrixBaseUrl = "https://sensulu.bitrix24.kz/rest/3629/ha5jfmg1i65ibkd7/";
+      // Базовый URL вашего вебхука Битрикс24
+      const bitrixBaseUrl = "https://sensulu.bitrix24.kz/rest/3629/3zyza4n6i5v4lc1v/";
 
       try {
         if (!bitrixBaseUrl.includes("YOUR_BITRIX24_DOMAIN")) {
           
-          // Шаг А: Создаем сделку
+          // Шаг А: Создаем сделку (указаны воронка CATEGORY_ID и стадия STAGE_ID)
           const dealResponse = await fetch(bitrixBaseUrl + 'crm.deal.add.json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -590,6 +589,8 @@
                 TITLE: `Заказ WebApp: ${customerData.name} (${customerData.city})`,
                 OPPORTUNITY: totalKZT,
                 CURRENCY_ID: "KZT",
+                CATEGORY_ID: 0,     // 0 — основная воронка (или ID вашей воронки)
+                STAGE_ID: "NEW",    // Начальная стадия воронки
                 COMMENTS: `=== ДАННЫЕ КЛИЕНТА ===\n` +
                           `Имя: ${customerData.name}\n` +
                           `Контакты: ${customerData.phone}\n` +
