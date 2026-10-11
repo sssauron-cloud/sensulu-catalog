@@ -609,16 +609,14 @@
           totalKZT: `${totalKZT} ₸`
         };
 
-        if (tg && tg.sendData) {
-          tg.sendData(JSON.stringify(telegramData));
-          tg.close();
+        tg.showAlert(messageText, () => {
+            if (tg.sendData) tg.sendData(JSON.stringify(telegramData));
+            if (tg.close) tg.close();
+          });
         } else {
-          alert("Заказ успешно отправлен и создан в Битрикс24!");
+          // Обычный браузер
+          alert(messageText);
         }
-      } catch (err) {
-        console.error("Ошибка отправки заказа:", err);
-        alert("Произошла ошибка при отправке заказа: " + err.message);
-      }
     }
 
     renderCategories();
