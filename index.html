@@ -269,7 +269,7 @@
   </div>
 </div>
 
-<!-- Кастомное окно уведомления об успехе (работает гарантированно) -->
+<!-- Кастомное окно уведомления об успехе -->
 <div id="success-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 20000; padding: 16px;">
   <div style="background: #ffffff; padding: 24px; border-radius: 16px; width: 100%; max-width: 320px; text-align: center; font-family: inherit; box-sizing: border-box;">
     <div style="font-size: 40px; margin-bottom: 12px;">✅</div>
@@ -365,7 +365,7 @@
       { id: 'l02', bitrixId: 121, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "02 Тёплый кофейный", priceKZT: 2850, desc: "Тёплый кофейный оттенок.", img: "images/lipliner_02.webp" },
       { id: 'l03', bitrixId: 125, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "03 Орехово-коричневый", priceKZT: 2850, desc: "Классический ореховый нюд.", img: "images/lipliner_03.webp" },
       { id: 'l04', bitrixId: 129, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "04 Пряный тёплый", priceKZT: 2850, desc: "Пряный оттенок с красноватым подтоном.", img: "images/lipliner_04.webp" },
-      { id: 'l05', bitrixId: 133, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "05 Нежный нюд", desc: "Нюд с розовым подтоном.", priceKZT: 2850, img: "images/lipliner_05.webp" },
+      { id: 'l05', bitrixId: 133, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "05 Нежный нюд", priceKZT: 2850, desc: "Нюд с розовым подтоном.", img: "images/lipliner_05.webp" },
       { id: 'l06', bitrixId: 137, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "06 Насыщенный нюд", priceKZT: 2850, desc: "Тёплый насыщенный нюд.", img: "images/lipliner_06.webp" },
       { id: 'l07', bitrixId: 147, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "07 Персиково-розовый", priceKZT: 2850, desc: "Самый светлый оттенок.", img: "images/lipliner_07.webp" },
       { id: 's01', bitrixId: 145, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "01", priceKZT: 6500, desc: "Холодное серебряное сияние.", img: "images/sparkle_01.webp" },
@@ -633,12 +633,12 @@
           totalKZT: `${totalKZT} ₸`
         };
 
-        // Очищаем корзину после отправки
+        // Очищаем корзину после успешного оформления
         cart = {};
         updateCart();
         renderProducts();
 
-        // Показываем поверх каталога кастомное окно об успехе
+        // Отображаем окно успеха
         document.getElementById('success-modal').style.display = 'flex';
 
       } catch (err) {
