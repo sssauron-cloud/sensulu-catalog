@@ -75,7 +75,7 @@
     <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px;">Город:</label>
     <input type="text" id="cust-city" placeholder="Астана" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
 
-    <button type="button" onclick="closeModalAndOpenCatalog()" style="width: 100%; background: var(--accent-color); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
+    <button type="button" onclick="saveCustomerProfile()" style="width: 100%; background: var(--accent-color); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
       Перейти к каталогу
     </button>
   </div>
@@ -106,15 +106,8 @@
   </div>
 
   <script>
-    let tg = null;
-    try {
-      if (window.Telegram && window.Telegram.WebApp) {
-        tg = window.Telegram.WebApp;
-        if (tg.expand) tg.expand();
-      }
-    } catch (e) {
-      console.log("Telegram WebApp не инициализирован");
-    }
+    let tg = window.Telegram?.WebApp;
+    if (tg && tg.expand) tg.expand();
 
     let exchangeRates = { KZT: 1, RUB: 0.187, USD: 0.00222 };
     const currencySymbols = { KZT: '₸', RUB: '₽', USD: '$' };
@@ -295,7 +288,7 @@
       totalElem.innerText = getConvertedPrice(totalKZT);
     }
 
-    function closeModalAndOpenCatalog() {
+    function saveCustomerProfile() {
       const name = document.getElementById('cust-name').value.trim();
       const phone = document.getElementById('cust-phone').value.trim();
       const country = document.getElementById('cust-country').value.trim();
