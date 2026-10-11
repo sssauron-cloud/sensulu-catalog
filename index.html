@@ -222,7 +222,7 @@
       justify-content: space-between;
       align-items: center;
       border-top: 1px solid var(--border-color);
-      z-index: 9999;
+      z-index: 999;
     }
 
     .cart-info {
@@ -244,8 +244,8 @@
 </head>
 <body>
 
-<!-- Окно ввода данных клиента перед показом каталога -->
-<div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 16px;">
+<!-- Окно ввода данных клиента -->
+<div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 99999; padding: 16px;">
   <div style="background: #ffffff; padding: 24px; border-radius: 16px; width: 100%; max-width: 360px; box-sizing: border-box; font-family: inherit;">
     <h3 style="margin: 0 0 8px 0; text-align: center; color: var(--accent-color); font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Контакты доставки</h3>
     <p style="margin: 0 0 16px 0; font-size: 12px; color: var(--secondary-text); text-align: center;">Пожалуйста, укажите ваши данные для оформления заказа</p>
@@ -262,7 +262,6 @@
     <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Город:</label>
     <input type="text" id="cust-city" placeholder="Астана" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
 
-    <!-- Заменили обычный onclick на id для надежного навешивания обработчика -->
     <button type="button" id="to-catalog-btn" style="width: 100%; background: var(--accent-color); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
       Перейти к каталогу
     </button>
@@ -283,13 +282,10 @@
     </select>
   </div>
 
-  <!-- Категории товаров -->
   <div class="categories-carousel" id="cat-carousel"></div>
 
-  <!-- Сетка товаров -->
   <div class="grid" id="product-grid"></div>
 
-  <!-- Панель корзины -->
   <div class="cart-bar" id="cart-bar">
     <div class="cart-info">
       Итого: <span id="total-price">0</span> <span id="cart-currency-symbol">₸</span>
@@ -298,8 +294,13 @@
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    if (tg && tg.expand) tg.expand();
+    let tg = null;
+    try {
+      tg = window.Telegram.WebApp;
+      if (tg && tg.expand) tg.expand();
+    } catch (e) {
+      console.log("Telegram WebApp не обнаружен");
+    }
 
     let exchangeRates = { KZT: 1, RUB: 0.187, USD: 0.00222 };
     const currencySymbols = { KZT: '₸', RUB: '₽', USD: '$' };
@@ -416,6 +417,7 @@
 
     function renderCategories() {
       const container = document.getElementById('cat-carousel');
+      if (!container) return;
       container.innerHTML = categories.map(c => `
         <div class="cat-item ${c.id === activeCategory ? 'active' : ''}" onclick="selectCategory('${c.id}')">
           <div class="cat-img-wrapper">
@@ -441,13 +443,15 @@
 
     function changeCurrency(val) {
       currentCurrency = val;
-      document.getElementById('cart-currency-symbol').innerText = currencySymbols[val];
+      const symbolElem = document.getElementById('cart-currency-symbol');
+      if (symbolElem) symbolElem.innerText = currencySymbols[val];
       renderProducts();
       updateCart();
     }
 
     function renderProducts() {
       const grid = document.getElementById('product-grid');
+      if (!grid) return;
       const symbol = currencySymbols[currentCurrency];
 
       const filteredProducts = activeCategory === 'all' 
@@ -489,21 +493,28 @@
     }
 
     function updateCart() {
+      const totalElem = document.getElementById('total-price');
+      if (!totalElem) return;
       let totalKZT = 0;
       for (let id in cart) {
         const product = products.find(p => p.id === id);
         if (product) totalKZT += product.priceKZT * cart[id];
       }
-      document.getElementById('total-price').innerText = getConvertedPrice(totalKZT);
+      totalElem.innerText = getConvertedPrice(totalKZT);
     }
 
     let customerData = { name: '', phone: '', country: '', city: '' };
 
     function saveCustomerProfile() {
-      const name = document.getElementById('cust-name').value.trim();
-      const phone = document.getElementById('cust-phone').value.trim();
-      const country = document.getElementById('cust-country').value.trim();
-      const city = document.getElementById('cust-city').value.trim();
+      const nameElem = document.getElementById('cust-name');
+      const phoneElem = document.getElementById('cust-phone');
+      const countryElem = document.getElementById('cust-country');
+      const cityElem = document.getElementById('cust-city');
+
+      const name = nameElem ? nameElem.value.trim() : '';
+      const phone = phoneElem ? phoneElem.value.trim() : '';
+      const country = countryElem ? countryElem.value.trim() : '';
+      const city = cityElem ? cityElem.value.trim() : '';
 
       if (!name || !phone || !country || !city) {
         alert('Пожалуйста, заполните все поля (включая контакты)!');
@@ -511,14 +522,29 @@
       }
 
       customerData = { name, phone, country, city };
-      document.getElementById('user-data-modal').style.display = 'none';
+      
+      const modal = document.getElementById('user-data-modal');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.remove();
+      }
+
+      renderCategories();
+      renderProducts();
     }
 
-    // Принудительное назначение обработчика клика на кнопку через JS для полной надежности в Telegram
-    document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация при загрузке страницы
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCategories();
+      renderProducts();
+      fetchExchangeRates();
+
       const btn = document.getElementById('to-catalog-btn');
       if (btn) {
-        btn.addEventListener('click', saveCustomerProfile);
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          saveCustomerProfile();
+        });
         btn.addEventListener('touchend', (e) => {
           e.preventDefault();
           saveCustomerProfile();
@@ -552,10 +578,10 @@
         return;
       }
 
-      const inputName = document.getElementById('cust-name').value.trim();
-      const inputPhone = document.getElementById('cust-phone').value.trim();
-      const inputCountry = document.getElementById('cust-country').value.trim();
-      const inputCity = document.getElementById('cust-city').value.trim();
+      const inputName = document.getElementById('cust-name')?.value.trim();
+      const inputPhone = document.getElementById('cust-phone')?.value.trim();
+      const inputCountry = document.getElementById('cust-country')?.value.trim();
+      const inputCity = document.getElementById('cust-city')?.value.trim();
 
       const finalName = inputName || customerData.name || 'Клиент';
       const finalPhone = inputPhone || customerData.phone || 'Не указан';
@@ -632,10 +658,6 @@
         alert("Произошла ошибка при отправке заказа: " + err.message);
       }
     }
-
-    renderCategories();
-    renderProducts();
-    fetchExchangeRates();
   </script>
 </body>
 </html>
