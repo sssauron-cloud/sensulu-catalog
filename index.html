@@ -243,6 +243,8 @@
   </style>
 </head>
 <body>
+
+<!-- Окно ввода данных клиента перед показом каталога -->
 <div id="user-data-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 16px;">
   <div style="background: #ffffff; padding: 24px; border-radius: 16px; width: 100%; max-width: 360px; box-sizing: border-box; font-family: inherit;">
     <h3 style="margin: 0 0 8px 0; text-align: center; color: var(--accent-color); font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Контакты доставки</h3>
@@ -260,11 +262,13 @@
     <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Город:</label>
     <input type="text" id="cust-city" placeholder="Астана" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
 
-    <button onclick="saveCustomerProfile()" style="width: 100%; background: var(--accent-color); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
+    <!-- Заменили обычный onclick на id для надежного навешивания обработчика -->
+    <button type="button" id="to-catalog-btn" style="width: 100%; background: var(--accent-color); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
       Перейти к каталогу
     </button>
   </div>
 </div>
+
   <div class="header">
     <h1>SEN SULU</h1>
     <p>Self-love starts with us</p>
@@ -279,10 +283,13 @@
     </select>
   </div>
 
+  <!-- Категории товаров -->
   <div class="categories-carousel" id="cat-carousel"></div>
 
+  <!-- Сетка товаров -->
   <div class="grid" id="product-grid"></div>
 
+  <!-- Панель корзины -->
   <div class="cart-bar" id="cart-bar">
     <div class="cart-info">
       Итого: <span id="total-price">0</span> <span id="cart-currency-symbol">₸</span>
@@ -346,7 +353,7 @@
       { id: 'l02', bitrixId: 121, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "02 Тёплый кофейный", priceKZT: 2850, desc: "Тёплый кофейный оттенок.", img: "images/lipliner_02.webp" },
       { id: 'l03', bitrixId: 125, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "03 Орехово-коричневый", priceKZT: 2850, desc: "Классический ореховый нюд.", img: "images/lipliner_03.webp" },
       { id: 'l04', bitrixId: 129, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "04 Пряный тёплый", priceKZT: 2850, desc: "Пряный оттенок с красноватым подтоном.", img: "images/lipliner_04.webp" },
-      { id: 'l05', bitrixId: 133, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "05 Нежный нюд", shade: "05 Нежный нюд с розовым подтоном.", priceKZT: 2850, desc: "Нюд с розовым подтоном.", img: "images/lipliner_05.webp" },
+      { id: 'l05', bitrixId: 133, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "05 Нежный нюд", priceKZT: 2850, desc: "Нюд с розовым подтоном.", img: "images/lipliner_05.webp" },
       { id: 'l06', bitrixId: 137, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "06 Насыщенный нюд", priceKZT: 2850, desc: "Тёплый насыщенный нюд.", img: "images/lipliner_06.webp" },
       { id: 'l07', bitrixId: 147, category: 'lipliner', title: "Карандаш для губ 0,4гр", shade: "07 Персиково-розовый", priceKZT: 2850, desc: "Самый светлый оттенок.", img: "images/lipliner_07.webp" },
       { id: 's01', bitrixId: 145, category: 'sparkle', title: "Спарклы для век 1,5 гр", shade: "01", priceKZT: 6500, desc: "Холодное серебряное сияние.", img: "images/sparkle_01.webp" },
@@ -507,6 +514,18 @@
       document.getElementById('user-data-modal').style.display = 'none';
     }
 
+    // Принудительное назначение обработчика клика на кнопку через JS для полной надежности в Telegram
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('to-catalog-btn');
+      if (btn) {
+        btn.addEventListener('click', saveCustomerProfile);
+        btn.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          saveCustomerProfile();
+        });
+      }
+    });
+
     async function sendOrder() {
       let orderList = [];
       let totalKZT = 0;
@@ -547,11 +566,10 @@
       const tgUser = tg?.initDataUnsafe?.user || {};
       const tgUsername = tgUser.username ? `@${tgUser.username}` : 'не указан';
 
-      // ⚠️ ВСТАВЬТЕ СЮДА ВАШУ АКТУАЛЬНУЮ ССЫЛКУ ИЗ БИТРИКС24 ⚠️
       const bitrixBaseUrl = "https://sensulu.bitrix24.kz/rest/3629/nc21rkzjlsjy3qx5/";
 
       try {
-        if (!bitrixBaseUrl.includes("ВАШ_СВЕЖИЙ_КОД_ВЕБХУКА")) {
+        if (!bitrixBaseUrl.includes("YOUR_BITRIX24_DOMAIN")) {
           
           const dealResponse = await fetch(bitrixBaseUrl + 'crm.deal.add.json', {
             method: 'POST',
