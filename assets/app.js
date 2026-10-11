@@ -1,5 +1,5 @@
 // Public website settings. Change ONLY the Worker URL and chat links; no API secrets here.
-const CFG={api:'https://REPLACE-WITH-YOUR-WORKER.workers.dev',turnstileSiteKey:'REPLACE_WITH_SITE_KEY',telegramBot:'',whatsappNumber:''};
+const CFG={api:'https://sensulu-api.sagaliyevsauron.workers.dev',turnstileSiteKey:'0x4AAAAAAFT_KWwveCwY_agP',telegramBot:'',whatsappNumber:''};
 const captchaIds={};function mountCaptcha(name){if(CFG.turnstileSiteKey.includes('REPLACE_WITH'))return;const el=document.getElementById(name);if(!el)return;const go=()=>{if(window.turnstile&&captchaIds[name]===undefined)captchaIds[name]=window.turnstile.render(el,{sitekey:CFG.turnstileSiteKey})};go();if(!window.turnstile)setTimeout(go,700)}function token(name){if(!window.turnstile||captchaIds[name]===undefined)throw Error('Проверка защиты ещё загружается. Подождите секунду.');let t=window.turnstile.getResponse(captchaIds[name]);if(!t)throw Error('Подтвердите, что вы не робот');return t}function resetCaptcha(name){if(window.turnstile&&captchaIds[name]!==undefined)window.turnstile.reset(captchaIds[name])}
 let products=[],categories=[],cart={};const $=s=>document.querySelector(s),money=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₸';
 try{cart=JSON.parse(localStorage.getItem('sensulu_cart_v2')||'{}')}catch{cart={}}
