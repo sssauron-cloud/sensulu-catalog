@@ -1,16 +1,70 @@
 // Public website settings. Change ONLY the Worker URL and chat links; no API secrets here.
 const CFG={api:'https://sensulu-api.sagaliyevsauron.workers.dev',turnstileSiteKey:'0x4AAAAAAFT_KWwveCwY_agP',telegramBot:'',whatsappNumber:''};
-const captchaIds={};function mountCaptcha(name){if(CFG.turnstileSiteKey.includes('REPLACE_WITH'))return;const el=document.getElementById(name);if(!el)return;const go=()=>{if(window.turnstile&&captchaIds[name]===undefined)captchaIds[name]=window.turnstile.render(el,{sitekey:CFG.turnstileSiteKey})};go();if(!window.turnstile)setTimeout(go,700)}function token(name){if(!window.turnstile||captchaIds[name]===undefined)throw Error('Проверка защиты ещё загружается. Подождите секунду.');let t=window.turnstile.getResponse(captchaIds[name]);if(!t)throw Error('Подтвердите, что вы не робот');return t}function resetCaptcha(name){if(window.turnstile&&captchaIds[name]!==undefined)window.turnstile.reset(captchaIds[name])}
+// Turnstile: wait for the external script and cleanly handle reopening forms.
+const captchaIds = {};
+const captchaTimers = {};
+function removeCaptcha(name) {
+  clearTimeout(captchaTimers[name]);
+  delete captchaTimers[name];
+  if (window.turnstile && captchaIds[name] !== undefined) {
+    try { window.turnstile.remove(captchaIds[name]); } catch (e) { console.warn('Turnstile cleanup:', e); }
+  }
+  delete captchaIds[name];
+}
+function mountCaptcha(name) {
+  if (CFG.turnstileSiteKey.includes('REPLACE_WITH')) return;
+  removeCaptcha(name);
+  const el = document.getElementById(name);
+  if (!el) return;
+  const started = Date.now();
+  const attempt = () => {
+    // A modal can be closed while the library is loading.
+    if (!el.isConnected) return;
+    if (window.turnstile && typeof window.turnstile.render === 'function') {
+      try {
+        captchaIds[name] = window.turnstile.render(el, {
+          sitekey: CFG.turnstileSiteKey,
+          'error-callback': (code) => {
+            console.warn('Turnstile challenge error:', code);
+          },
+          'expired-callback': () => console.info('Turnstile token expired; retry verification')
+        });
+      } catch (e) {
+        console.error('Turnstile render failed:', e);
+        el.textContent = 'Не удалось загрузить проверку. Обновите страницу и попробуйте ещё раз.';
+      }
+    } else if (Date.now() - started < 15000) {
+      captchaTimers[name] = setTimeout(attempt, 350);
+    } else {
+      el.textContent = 'Сервис проверки недоступен. Проверьте подключение к Cloudflare и обновите страницу.';
+    }
+  };
+  attempt();
+}
+function token(name) {
+  if (!window.turnstile || captchaIds[name] === undefined) {
+    throw Error('Проверка защиты ещё загружается или недоступна. Обновите страницу и попробуйте снова.');
+  }
+  const value = window.turnstile.getResponse(captchaIds[name]);
+  if (!value) throw Error('Дождитесь завершения проверки Cloudflare Turnstile.');
+  return value;
+}
+function resetCaptcha(name) {
+  if (window.turnstile && captchaIds[name] !== undefined) {
+    try { window.turnstile.reset(captchaIds[name]); } catch(e) { console.warn('Turnstile reset:', e); }
+  }
+}
+
 let products=[],categories=[],cart={};const $=s=>document.querySelector(s),money=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₸';
 try{cart=JSON.parse(localStorage.getItem('sensulu_cart_v2')||'{}')}catch{cart={}}
 const save=()=>{localStorage.setItem('sensulu_cart_v2',JSON.stringify(cart));renderBag()};
-function route(page){if(!$('#'+page))return;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===page));$('#bagBtn').hidden=!['catalog','cart'].includes(page);history.replaceState(null,'','#'+page);window.scrollTo(0,0);if(page==='catalog')renderProducts();if(page==='cart')renderCart();if(page==='collab')mountCaptcha('collabTurnstile')}
+function route(page){if(!$('#'+page))return;if(page!=='collab')removeCaptcha('collabTurnstile');document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===page));$('#bagBtn').hidden=!['catalog','cart'].includes(page);history.replaceState(null,'','#'+page);window.scrollTo(0,0);if(page==='catalog')renderProducts();if(page==='cart')renderCart();if(page==='collab')mountCaptcha('collabTurnstile')}
 const count=()=>Object.values(cart).reduce((a,b)=>a+b,0);const total=()=>products.reduce((a,p)=>a+p.priceKZT*(cart[p.id]||0),0);
 function renderBag(){let n=count();$('#bagCount').textContent=n;$('#floatingCart').hidden=!n;$('#floatingInfo').textContent=`${n} шт. · ${money(total())}`}
 function renderProducts(){const filter=$('#category').value,q=$('#search').value.toLowerCase().trim();let items=products.filter(p=>(filter==='all'||p.category===filter)&&[p.title,p.shade,p.desc].join(' ').toLowerCase().includes(q));$('#resultCount').textContent=`Найдено товаров: ${items.length}`;$('#products').innerHTML=items.map(p=>`<article class="product"><img src="${p.img}" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/placeholder.svg'"><div class="product-content"><h3>${escapeHTML(p.title)}</h3><span class="shade">${escapeHTML(p.shade)}</span><div class="desc">${escapeHTML(p.desc||'')}</div><div class="price">${money(p.priceKZT)}</div><button data-add="${p.id}">Добавить в корзину ${cart[p.id]?'('+cart[p.id]+')':''}</button></div></article>`).join('')||'<p>По вашему запросу товаров не найдено.</p>'}
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function renderCart(){let chosen=products.filter(p=>cart[p.id]>0);$('#cartItems').innerHTML=chosen.map(p=>`<div class="cart-line"><img src="${p.img}" onerror="this.onerror=null;this.src='assets/placeholder.svg'" alt=""><div class="cart-name"><strong>${escapeHTML(p.title)}</strong><small>${escapeHTML(p.shade)}</small><div>${money(p.priceKZT*cart[p.id])}</div></div><div class="qty"><button data-dec="${p.id}" aria-label="Уменьшить">−</button><strong>${cart[p.id]}</strong><button data-add="${p.id}" aria-label="Увеличить">+</button></div><button class="back" data-remove="${p.id}" aria-label="Удалить">×</button></div>`).join('')||'<p class="subtle" style="text-align:center;padding:40px">В корзине пока нет товаров.</p>';$('#cartTotal').textContent=money(total());$('#checkoutBtn').disabled=!chosen.length}
-function showModal(html){delete captchaIds.orderTurnstile;$('#modalBody').innerHTML=html;$('#modal').hidden=false;document.body.style.overflow='hidden'}function closeModal(){$('#modal').hidden=true;document.body.style.overflow='';delete captchaIds.orderTurnstile}
+function showModal(html){removeCaptcha('orderTurnstile');$('#modalBody').innerHTML=html;$('#modal').hidden=false;document.body.style.overflow='hidden'}function closeModal(){$('#modal').hidden=true;document.body.style.overflow='';removeCaptcha('orderTurnstile')}
 function showSuccess(title,msg){showModal(`<div class="success"><span class="success-icon">✓</span><h2>${title}</h2><p>${msg}</p><button class="primary wide" data-close>На главную</button></div>`)}
 function orderModal(){if(!count())return;showModal(`<h2>Оформление заказа</h2><p class="subtle">${count()} шт. · ${money(total())}</p><form class="form" id="orderForm"><label>Ваше имя<input name="name" maxlength="100" required placeholder="Как к Вам обращаться"></label><label>Город<input name="city" maxlength="100" required placeholder="Ваш город"></label><label>Адрес доставки<input name="address" maxlength="250" required placeholder="Улица, дом, квартира"></label><label>Контактный телефон<input name="phone" type="tel" required placeholder="+7 700 000 00 00"></label><div id="orderTurnstile" class="captcha"></div><button class="primary wide" type="submit">Подтвердить заказ · ${money(total())}</button></form>`);mountCaptcha('orderTurnstile')}
 async function api(path,payload){if(CFG.api.includes('REPLACE-WITH-YOUR-WORKER'))throw Error('Приём заявок ещё не подключён. Настройте адрес Cloudflare Worker.');const res=await fetch(CFG.api.replace(/\/$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});let result=await res.json().catch(()=>({}));if(!res.ok||!result.ok)throw Error(result.error||'Не удалось отправить заявку');return result}
