@@ -1,5 +1,5 @@
 // Public website settings. Change ONLY the Worker URL and chat links; no API secrets here.
-const CFG={api:'https://sensulu-api.sagaliyevsauron.workers.dev',turnstileSiteKey:'0x4AAAAAAFT_KWwveCwY_agP',telegramBot:'',whatsappNumber:''};
+const CFG={api:'https://sensulu-api.sagaliyevsauron.workers.dev',turnstileSiteKey:'0x4AAAAAAFT_KWwveCwY_agP',telegramBot:'SenSulu_bot',whatsappNumber:'77000254996'};
 // Turnstile: wait for the external script and cleanly handle reopening forms.
 const captchaIds = {};
 const captchaTimers = {};
@@ -71,8 +71,44 @@ async function api(path,payload){if(CFG.api.includes('REPLACE-WITH-YOUR-WORKER')
 function setBusy(form,busy){let b=form.querySelector('[type=submit]');if(b){b.disabled=busy;b.textContent=busy?'Отправляем...':b.dataset.original||b.textContent;if(!b.dataset.original&&!busy)b.dataset.original=b.textContent}}
 async function submitOrder(form){let b=form.querySelector('[type=submit]'),original=b.textContent;b.disabled=true;b.textContent='Оформляем заказ…';try{const customer=Object.fromEntries(new FormData(form));const orderId= sessionStorage.getItem('sensulu_pending_order')||crypto.randomUUID();sessionStorage.setItem('sensulu_pending_order',orderId);let data=await api('/order',{orderId,turnstileToken:token('orderTurnstile'),customer,items:Object.entries(cart).filter(([id,q])=>q>0).map(([id,quantity])=>({id,quantity}))});cart={};save();sessionStorage.removeItem('sensulu_pending_order');showSuccess('Ваш заказ оформлен!',`Номер заказа: ${data.dealId}. Менеджер с Вами свяжется для подтверждения заказа и оплаты.`)}catch(err){alert(err.message);resetCaptcha('orderTurnstile')}finally{b.disabled=false;b.textContent=original}}
 async function submitCollab(form){let b=form.querySelector('[type=submit]'),original=b.textContent;b.disabled=true;b.textContent='Отправляем заявку…';try{let obj=Object.fromEntries(new FormData(form));if(!obj.name.trim()||!obj.social.trim()||!obj.phone.trim())throw Error('Заполните все поля');const requestId=sessionStorage.getItem('sensulu_pending_collab')||crypto.randomUUID();sessionStorage.setItem('sensulu_pending_collab',requestId);await api('/collaboration',{requestId,turnstileToken:token('collabTurnstile'),...obj});sessionStorage.removeItem('sensulu_pending_collab');form.reset();showSuccess('Заявка принята!','Ваша заявка на сотрудничество принята, менеджер с Вами свяжется.')}catch(err){alert(err.message);resetCaptcha('collabTurnstile')}finally{b.disabled=false;b.textContent=original}}
-function consult(){const q=$('#question').value.trim();if(!q){$('#question').focus();return}if(CFG.whatsappNumber){window.open('https://wa.me/'+CFG.whatsappNumber.replace(/\D/g,'')+'?text='+encodeURIComponent(q),'_blank','noopener');$('#consultHint').textContent='Отправьте подготовленное сообщение в WhatsApp — оно поступит в подключённую открытую линию.';return}if(CFG.telegramBot){const url='https://t.me/'+CFG.telegramBot.replace(/^@/,'');$('#consultHint').textContent='Скопируйте вопрос и отправьте его в открывшемся Telegram-чате.';navigator.clipboard?.writeText(q).catch(()=>{});window.open(url,'_blank','noopener');return}$('#consultHint').textContent='Добавьте ссылку на Telegram-бота или WhatsApp в assets/app.js либо установите виджет онлайн-чата Битрикс24.'}
+// Consultation stays in the customer's chosen messenger: no CRM deal is created by this page.
+function consultVia(channel) {
+  const q = $('#question').value.trim();
+  if (!q) { $('#question').focus(); $('#consultHint').textContent = 'Сначала напишите Ваш вопрос.'; return; }
+  if (channel === 'whatsapp') {
+    if (!CFG.whatsappNumber) { $('#consultHint').textContent = 'Номер WhatsApp магазина ещё не настроен.'; return; }
+    const url = 'https://wa.me/' + CFG.whatsappNumber.replace(/\D/g, '') + '?text=' + encodeURIComponent(q);
+    $('#consultHint').textContent = 'В WhatsApp нажмите «Отправить», чтобы вопрос поступил менеджеру.';
+    window.open(url, '_blank', 'noopener');
+    return;
+  }
+  if (channel === 'telegram') {
+    if (!CFG.telegramBot) { $('#consultHint').textContent = 'Telegram-бот магазина ещё не настроен.'; return; }
+    const tgUrl = 'https://t.me/' + CFG.telegramBot.replace(/^@/, '');
+    // Bot deep links cannot automatically send arbitrary text. Copy the question for manual sending.
+    $('#consultHint').textContent = 'Откроется Telegram. Вставьте скопированный вопрос в чат и нажмите «Отправить». Если копирование не сработало, скопируйте вопрос из формы вручную.';
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(q).catch(() => {
+        $('#consultHint').textContent = 'Откройте Telegram и скопируйте вопрос из формы вручную, затем отправьте его боту.';
+      });
+    }
+    window.open(tgUrl, '_blank', 'noopener');
+  }
+}
+function initConsultButtons() {
+  const original = $('#askBtn');
+  if (!original) return;
+  const wa = document.createElement('button');
+  wa.type = 'button'; wa.className = 'primary wide'; wa.textContent = 'Написать в WhatsApp';
+  wa.addEventListener('click', () => consultVia('whatsapp'));
+  const tgBtn = document.createElement('button');
+  tgBtn.type = 'button'; tgBtn.className = 'primary wide'; tgBtn.textContent = 'Написать в Telegram';
+  tgBtn.style.marginTop = '12px';
+  tgBtn.addEventListener('click', () => consultVia('telegram'));
+  original.replaceWith(wa, tgBtn);
+}
+
 document.addEventListener('click',e=>{let el=e.target.closest('[data-go],[data-add],[data-dec],[data-remove],[data-close],[data-home]');if(!el)return;if(el.dataset.go)route(el.dataset.go);else if(el.hasAttribute('data-home'))route('landing');else if(el.dataset.add){cart[el.dataset.add]=(cart[el.dataset.add]||0)+1;save();if($('#cart').classList.contains('active'))renderCart();else renderProducts()}else if(el.dataset.dec){cart[el.dataset.dec]=Math.max(0,(cart[el.dataset.dec]||0)-1);if(!cart[el.dataset.dec])delete cart[el.dataset.dec];save();renderCart()}else if(el.dataset.remove){delete cart[el.dataset.remove];save();renderCart()}else if(el.hasAttribute('data-close')){closeModal();route('landing')}});
-$('#homeBtn').onclick=()=>route('landing');$('#bagBtn').onclick=()=>route('cart');$('#checkoutBtn').onclick=orderModal;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#search').oninput=renderProducts;$('#category').onchange=renderProducts;$('#askBtn').onclick=consult;
+$('#homeBtn').onclick=()=>route('landing');$('#bagBtn').onclick=()=>route('cart');$('#checkoutBtn').onclick=orderModal;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#search').oninput=renderProducts;$('#category').onchange=renderProducts;initConsultButtons();
 document.addEventListener('submit',e=>{if(e.target.id==='orderForm'){e.preventDefault();submitOrder(e.target)}if(e.target.id==='collabForm'){e.preventDefault();submitCollab(e.target)}});
 fetch('assets/products.json').then(r=>{if(!r.ok)throw Error('Каталог недоступен');return r.json()}).then(d=>{products=d.products;categories=d.categories;$('#category').innerHTML=categories.map(c=>`<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('');renderBag();renderProducts();route(['landing','catalog','cart','collab','consult'].includes(location.hash.slice(1))?location.hash.slice(1):'landing')}).catch(err=>{$('#products').textContent='Не удалось загрузить каталог: '+err.message});
